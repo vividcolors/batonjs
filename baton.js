@@ -3,25 +3,24 @@
 
 
 export const baton = (state, show, baseEl) => {
-    const ehcache = new WeakMap()  // event handler cache; el -> {[event-type]:[raw-handler, wired-handler]}
+    const ehcache = new WeakMap()  // event handler cache; el -> {[event-type]:handler}
     const tasks = []  // update tasks for elements; {el, props}[]
     if (! baseEl) {
       baseEl = document.documentElement
     }
-  
-    const wire = (f) => {
-      return (ev) => {
-        const state0 = f(ev, state)
-        if (state0 && state0 !== state) {
-          state = state0
-          const decls = show(state)
-          const props = {}
-          tasks.push({el:baseEl, props})
-          select(decls, baseEl, props)
-          update()
-        }
+
+    const withState = (updater) => {
+      const state0 = updater(state)
+      if (state0 && state0 !== state) {
+        state = state0
+        const decls = show(state)
+        const props = {}
+        tasks.push({el:baseEl, props})
+        select(decls, baseEl, props)
+        update()
       }
     }
+  
     const select = (decls, el, props) => {
       for (let name in decls) {
         const value = decls[name]
@@ -58,20 +57,18 @@ export const baton = (state, show, baseEl) => {
               ehcache.set(el, ehs)
             }
             if (ehs[eventType]) {
-              if (ehs[eventType][0] === value) {
+              if (ehs[eventType] === value) {
                 // unchanged
               } else {
                 // handler changed
-                const wiredHandler = wire(value)
-                el.removeEventListener(eventType, ehs[eventType][1])
-                el.addEventListener(eventType, wiredHandler)
-                ehs[eventType] = [value, wiredHandler]
+                el.removeEventListener(eventType, ehs[eventType])
+                el.addEventListener(eventType, value)
+                ehs[eventType] = value
               }
             } else {
               // new handler
-              const wiredHandler = wire(value)
-              el.addEventListener(eventType, wiredHandler)
-              ehs[eventType] = [value, wiredHandler]
+              el.addEventListener(eventType, value)
+              ehs[eventType] = value
             }
           }
           else if (name == "classList") {
@@ -100,4 +97,6 @@ export const baton = (state, show, baseEl) => {
     tasks.push({el:baseEl, props})
     select(decls, baseEl, props)
     update()
+
+    return withState
   } 

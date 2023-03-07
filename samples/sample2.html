@@ -5,8 +5,8 @@
     <script type="module">
       import {baton} from '../baton.js'
       const state = {count:0}
-      const increment = (ev, state) => {
-        return {count: state.count + 1}
+      const increment = (ev) => {
+        withState((state) => ({count: state.count + 1}))
       }
       const show = (state) => ({
         "#counter": {
@@ -16,7 +16,7 @@
           onclick: increment
         }
       })
-      baton(state, show)
+      const withState = baton(state, show)
     </script>
   </body>
 </html>
