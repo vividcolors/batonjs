@@ -1,0 +1,22 @@
+<html id="html">
+  <body id="body">
+    <p id="p">Count: <span id="counter"></span></p>
+    <button id="theButton" type="button">increment</button>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {count:0}
+      const increment = (ev, state) => {
+        return {count: state.count + 1}
+      }
+      const show = (state) => ({
+        "#counter": {
+          innerText: state.count
+        }, 
+        "button": {
+          onclick: increment
+        }
+      })
+      baton(state, show)
+    </script>
+  </body>
+</html>
