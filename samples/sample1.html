@@ -8,14 +8,12 @@
       const show = (state) => ({
         "#counter": {
           innerText: state.count
-        }, 
-        "button": {
-          onclick: (ev, state) => {
-            return {count: state.count + 1}
-          }
         }
       })
-      baton(state, show)
+      document.getElementById('theButton').addEventListener('click', (ev) => {
+        withState(state => ({count: state.count + 1}))
+      })
+      const withState = baton(state, show)
     </script>
   </body>
 </html>
