@@ -5,6 +5,7 @@
 export const baton = (state, show, baseEl) => {
     const ehcache = new WeakMap()  // event handler cache; el -> {[event-type]:handler}
     const tasks = []  // update tasks for elements; {el, props}[]
+    const posttasks = []  // posttask[]; posttask: () => void
     if (! baseEl) {
       baseEl = document.documentElement
     }
@@ -18,6 +19,7 @@ export const baton = (state, show, baseEl) => {
         tasks.push({el:baseEl, props})
         select(decls, baseEl, props)
         update()
+        postfix()
       }
     }
   
@@ -26,6 +28,7 @@ export const baton = (state, show, baseEl) => {
         const value = decls[name]
         if (name == "attributes" || name == "classList" || name == "dataset" || name == "style" ||  // special properties
             (name[0] == 'o' && name[1] == 'n') ||  // event handlers
+            (name[0] == '@') ||  // virtual properties
             !((value !== null && typeof value == "object") || typeof value == "function")) {  // they are element declaration
           // property declaration
           props[name] = value
@@ -71,6 +74,22 @@ export const baton = (state, show, baseEl) => {
               ehs[eventType] = value
             }
           }
+          else if (name[0] == '@') {
+            const dataName = name.slice(1)
+            const dataValue = el.dataset[dataName]
+            if (typeof dataValue == 'string') {  // there exists old value
+              const oldValue = JSON.parse(dataValue)
+              if (value !== oldValue) {
+                posttasks.push(() => {
+                  const ehs = ehcache.get(el)
+                  if (ehs && ehs[dataName]) {
+                    ehs[dataName](el, dataName, value, oldValue)
+                  }
+                })
+              }
+            }
+            el.dataset[dataName] = JSON.stringify(value)
+          }
           else if (name == "classList") {
             for (let c in value) {
               if (value[c]) {
@@ -91,12 +110,20 @@ export const baton = (state, show, baseEl) => {
         }
       }
     }
+
+    const postfix = () => {
+      while (posttasks.length) {
+        const callback = posttasks.shift()
+        callback()
+      }
+    }
   
     const decls = show(state)
     const props = {}
     tasks.push({el:baseEl, props})
     select(decls, baseEl, props)
     update()
+    postfix()
 
     return withState
   } 

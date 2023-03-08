@@ -1,0 +1,116 @@
+<html id="html">
+  <body id="body">
+    <style>
+      .modal {
+        position:fixed;
+        left:0;
+        top:0;
+        right:0;
+        bottom:0;
+        background: rgba(0,0,0,0.3);
+        display: none;
+      }
+      .modal.is-open {
+        display: block;
+        opacity: 1;
+      }
+      .modal.transition-open {
+        transition: transform 0.5s linear;
+        opacity: 1;
+        transform: translateY(0);
+        display: block;
+      }
+      .modal.init-open {
+        opacity: 0;
+        transform: translateY(100%);
+        display: block;
+      }
+      .modal.transition-close {
+        transition: opacity 0.2s linear;
+        opacity: 0;
+        display: block;
+      }
+      .modal.init-close {
+        opacity: 1; 
+        display: block;
+      }
+      .modal > .modal-frame {
+        position:absolute;
+        top:100px;
+        left: 0;
+        right: 0;
+        width: 400px;
+        height: 300px;
+        margin: 0 auto;
+        background: #FFFFFF;
+      }
+      .modal.transition-open > .modal-frame {
+        transition: transform 0.2s linear 0.1s;
+        transform: scale(1);
+      }
+      .modal.init-open > .modal-frame {
+        transform: scale(0);
+      }
+      .modal.transition-close > .modal-frame {
+        transition: transform 0.2s linear;
+        transform: translateX(100%);
+      }
+      .modal.init-close > .modal-frame {
+        transform: translateX(0);
+      }
+
+    </style>
+    <button id="openButton" type="button">Open Modal</button>
+    <div class="modal">
+      <div class="modal-frame">
+        <p>This is modal</p>
+        <button id="closeButton" type="button">Close Modal</button>
+      </div>
+    </div>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const onopen = (el, name, value, oldValue) => {
+        const action = (value) ? 'open' : 'close'
+        el.classList.add('init-' + action)
+        el.classList.add('transition-' + action)
+        window.setTimeout(() => {
+          el.classList.remove('init-' + action)
+          const h =  (ev) => {
+            if (ev.target !== el) return;
+            if (value) el.classList.add('is-open')
+            else el.classList.remove('is-open')
+            el.classList.remove('transition-' + action)
+            el.removeEventListener('transitionend', h)
+          }
+          el.addEventListener('transitionend', h)
+          window.setTimeout(() => {
+            if (value) el.classList.add('is-open')
+            else el.classList.remove('is-open')
+            el.classList.remove('transition-' + action)
+            el.removeEventListener('transitionend', h)
+          }, 800)
+        }, 100)
+      }
+      const state = {modalOpen:false}
+      const openModal = (ev) => {
+        withState((state) => ({modalOpen:true}))
+      }
+      const closeModal = (ev) => {
+        withState((state) => ({modalOpen:false}))
+      }
+      const show = (state) => ({
+        "#openButton": {
+          onclick: openModal
+        }, 
+        "#closeButton": {
+          onclick: closeModal
+        }, 
+        ".modal": {
+          "@open": state.modalOpen, 
+          "onopen": onopen
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
