@@ -76,7 +76,7 @@ export const baton = (state, show, baseEl) => {
           }
           else if (name[0] == '@') {
             const dataName = name.slice(1)
-            const dataValue = el.dataset[dataName]
+            const dataValue = el.dataset["baton-" + dataName]
             if (typeof dataValue == 'string') {  // there exists old value
               const oldValue = JSON.parse(dataValue)
               if (value !== oldValue) {
@@ -88,7 +88,7 @@ export const baton = (state, show, baseEl) => {
                 })
               }
             }
-            el.dataset[dataName] = JSON.stringify(value)
+            el.dataset["baton-" + dataName] = JSON.stringify(value)
           }
           else if (name == "classList") {
             for (let c in value) {
