@@ -3,7 +3,6 @@
 
 
 export const baton = (state, show, baseEl) => {
-    const ehcache = new WeakMap()  // event handler cache; el -> {[event-type]:handler}
     const tasks = []  // update tasks for elements; {el, props}[]
     const posttasks = []  // posttask[]; posttask: () => void
     if (! baseEl) {
@@ -52,26 +51,22 @@ export const baton = (state, show, baseEl) => {
           const value = props[name]
           if (name[0] == 'o' && name[1] == 'n') {  // event handler
             const eventType = name.slice(2)
-            let ehs = null
-            if (ehcache.has(el)) {
-              ehs = ehcache.get(el)
-            } else {
-              ehs = {}
-              ehcache.set(el, ehs)
+            if (! el.batonEhs) {
+              el.batonEhs = {}
             }
-            if (ehs[eventType]) {
-              if (ehs[eventType] === value) {
+            if (el.batonEhs[eventType]) {
+              if (el.batonEhs[eventType] === value) {
                 // unchanged
               } else {
                 // handler changed
-                el.removeEventListener(eventType, ehs[eventType])
+                el.removeEventListener(eventType, el.batonEhs[eventType])
                 el.addEventListener(eventType, value)
-                ehs[eventType] = value
+                el.batonEhs[eventType] = value
               }
             } else {
               // new handler
               el.addEventListener(eventType, value)
-              ehs[eventType] = value
+              el.batonEhs[eventType] = value
             }
           }
           else if (name[0] == '@') {
@@ -83,9 +78,8 @@ export const baton = (state, show, baseEl) => {
               const oldValue = el.batonVirtual[dataName]
               if (value !== oldValue) {
                 posttasks.push(() => {
-                  const ehs = ehcache.get(el)
-                  if (ehs && ehs[dataName]) {
-                    ehs[dataName](el, dataName, value, oldValue)
+                  if (el.batonEhs && el.batonEhs[dataName]) {
+                    el.batonEhs[dataName](el, dataName, value, oldValue)
                   }
                 })
               }
