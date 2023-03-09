@@ -8,21 +8,8 @@ export const baton = (state, show, baseEl) => {
     if (! baseEl) {
       baseEl = document.documentElement
     }
-
-    const withState = (updater) => {
-      const state0 = updater(state)
-      if (state0 && state0 !== state) {
-        state = state0
-        const decls = show(state)
-        const props = {}
-        tasks.push({el:baseEl, props})
-        select(decls, baseEl, props)
-        update()
-        postfix()
-      }
-    }
   
-    const select = (decls, el, props) => {
+    const collectTasks = (decls, el, props) => {
       for (let name in decls) {
         const value = decls[name]
         if (name == "attributes" || name == "classList" || name == "dataset" || name == "style" ||  // special properties
@@ -39,25 +26,24 @@ export const baton = (state, show, baseEl) => {
             const subDecls = (typeof value == "function") ? value(subEl, i) : value
             const subProps = {}
             tasks.push({el:subEl, props:subProps})
-            select(subDecls, subEls[i], subProps)
+            collectTasks(subDecls, subEls[i], subProps)
           }
         }
       }
     }
-    const update = () => {
+    
+    const dispatchTasks = () => {
       while (tasks.length) {
         const {el, props} = tasks.shift()
         for (let name in props) {
           const value = props[name]
-          if (name[0] == 'o' && name[1] == 'n') {  // event handler
+          if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
             const eventType = name.slice(2)
             if (! el.batonEhs) {
               el.batonEhs = {}
             }
             if (el.batonEhs[eventType]) {
-              if (el.batonEhs[eventType] === value) {
-                // unchanged
-              } else {
+              if (el.batonEhs[eventType] !== value) {
                 // handler changed
                 el.removeEventListener(eventType, el.batonEhs[eventType])
                 el.addEventListener(eventType, value)
@@ -69,7 +55,7 @@ export const baton = (state, show, baseEl) => {
               el.batonEhs[eventType] = value
             }
           }
-          else if (name[0] == '@') {
+          else if (name[0] == '@') {  // case: virtual property
             const dataName = name.slice(1)
             if (! el.batonVirtual) {
               el.batonVirtual = {}
@@ -86,7 +72,7 @@ export const baton = (state, show, baseEl) => {
             }
             el.batonVirtual[dataName] = value
           }
-          else if (name == "classList") {
+          else if (name == "classList") {  // case: classList property
             for (let c in value) {
               if (value[c]) {
                 el.classList.add(c)
@@ -95,12 +81,12 @@ export const baton = (state, show, baseEl) => {
               }
             }
           }
-          else if (value !== null && typeof value == "object") {
+          else if (value !== null && typeof value == "object") {  // case: object property
             for (let x in value) {
               el[name][x] = value[x]
             }
           }
-          else {
+          else {  // case: scalar property
             el[name] = value
           }
         }
@@ -113,13 +99,25 @@ export const baton = (state, show, baseEl) => {
         callback()
       }
     }
+
+    const reflect = () => {
+      const decls = show(state)
+      const props = {}
+      tasks.push({el:baseEl, props})
+      collectTasks(decls, baseEl, props)
+      dispatchTasks()
+      postfix()
+    }
+
+    const withState = (update) => {
+      const state0 = update(state)
+      if (state0 && state0 !== state) {
+        state = state0
+        reflect()
+      }
+    }
   
-    const decls = show(state)
-    const props = {}
-    tasks.push({el:baseEl, props})
-    select(decls, baseEl, props)
-    update()
-    postfix()
+    reflect()
 
     return withState
   } 
