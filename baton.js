@@ -76,9 +76,11 @@ export const baton = (state, show, baseEl) => {
           }
           else if (name[0] == '@') {
             const dataName = name.slice(1)
-            const dataValue = el.dataset["baton-" + dataName]
-            if (typeof dataValue == 'string') {  // there exists old value
-              const oldValue = JSON.parse(dataValue)
+            if (! el.batonVirtual) {
+              el.batonVirtual = {}
+            }
+            if (el.batonVirtual.hasOwnProperty(dataName)) {
+              const oldValue = el.batonVirtual[dataName]
               if (value !== oldValue) {
                 posttasks.push(() => {
                   const ehs = ehcache.get(el)
@@ -88,7 +90,7 @@ export const baton = (state, show, baseEl) => {
                 })
               }
             }
-            el.dataset["baton-" + dataName] = JSON.stringify(value)
+            el.batonVirtual[dataName] = value
           }
           else if (name == "classList") {
             for (let c in value) {
