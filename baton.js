@@ -2,7 +2,7 @@
 
 
 
-export const baton = (state, show, baseEl) => {
+export const baton = (state, show, baseEl = null) => {
     const tasks = []  // update tasks for elements; {el, props}[]
     const posttasks = []  // posttask[]; posttask: () => void
     if (! baseEl) {
@@ -83,7 +83,11 @@ export const baton = (state, show, baseEl) => {
           }
           else if (value !== null && typeof value == "object") {  // case: object property
             for (let x in value) {
-              el[name][x] = value[x]
+              if (typeof value[x] === "undefined") {
+                delete el[name]
+              } else {
+                el[name][x] = value[x]
+              }
             }
           }
           else {  // case: scalar property
