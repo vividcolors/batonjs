@@ -5,6 +5,9 @@
 export const baton = (state, show, baseEl = null) => {
     const tasks = []  // update tasks for elements; {el, props}[]
     const posttasks = []  // posttask[]; posttask: () => void
+    if ((state === null || typeof state === "undefined")) {
+      throw new Error("`state' is out of range")
+    }
     if (! baseEl) {
       baseEl = document.documentElement
     }
@@ -81,6 +84,15 @@ export const baton = (state, show, baseEl = null) => {
               }
             }
           }
+          else if (name == "attributes") {  // case: attributes property
+            for (let a in value) {
+              if (typeof value[a] === "undefined") {
+                el.removeAttribute(a)
+              } else {
+                el.setAttribute(a, value[a])
+              }
+            }
+          }
           else if (value !== null && typeof value == "object") {  // case: object property
             for (let x in value) {
               if (typeof value[x] === "undefined") {
@@ -115,7 +127,7 @@ export const baton = (state, show, baseEl = null) => {
 
     const withState = (update) => {
       const state0 = update(state)
-      if (state0 && state0 !== state) {
+      if ((state0 !== null && typeof state0 !== "undefined") && state0 !== state) {
         state = state0
         reflect()
       }
