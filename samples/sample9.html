@@ -1,0 +1,53 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Using web components</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.3.0/dist/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.3.0/dist/shoelace-autoloader.js"></script>
+  </head>
+  <body id="body">
+    <sl-color-picker label="Select a color" id="color"></sl-color-picker><br />
+    <p id="echo">color: <span></span></p>
+    <sl-button id="openButton">Open Drawer</sl-button>
+    <sl-drawer label="Drawer" id="drawer">
+      This is Drawer.
+      <sl-button slot="footer" variant="primary" id="closeButton">Close</sl-button>
+    </sl-drawer>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {color:"", drawerOpen:false}
+      const onchange = (ev) => {
+        withState((state) => ({...state, color:ev.currentTarget.value}))
+      }
+      const onopen = (ev) => {
+        withState((state) => ({...state, drawerOpen:true}))
+      }
+      const onclose = (ev) => {
+        withState((state) => ({...state, drawerOpen:false}))
+      }
+      const show = (state) => {
+        return {
+          "#color": {
+            value: state.color, 
+            "onsl-change": onchange
+          }, 
+          "#echo span": {
+            innerText: state.color
+          }, 
+          "#openButton": {
+            onclick: onopen
+          }, 
+          "#drawer": {
+            open: state.drawerOpen, 
+            "onsl-hide": onclose  // Drawer can be closed by clicking the overlay, such case we are notified by this handler.
+          }, 
+          "#closeButton": {
+            onclick: onclose
+          }
+        }
+      }
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Handling SVG</title>
+  </head>
+  <body id="body">
+    <svg width="200" height="100" viewBox="0, 0, 200, 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 0,30 200,30" fill="none" stroke="black" stroke-dasharray="10 200" stroke-width="10" stroke-linecap="round" id="line" style="transition: stroke-dasharray 1s linear" />
+    </svg>
+    <button id="theButton" type="button">toggle length</button>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {extended:false}
+      const go = (ev) => {
+        withState((state) => ({extended: !state.extended}))
+      }
+      const show = (state) => ({
+        "#line": {
+          attributes:{"stroke-dasharray": state.extended ? "200 10" : "10 200"}
+        }, 
+        "#theButton": {
+          onclick: go
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

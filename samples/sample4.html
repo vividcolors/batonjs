@@ -1,0 +1,40 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Using classList property, style property</title>
+  </head>
+  <body id="body">
+    <style>
+      p {color:green;}
+      .is-red {color:red;}
+    </style>
+    <p id="p">This is text.</p>
+    <button id="button1" data-property="isRed">Toggle color</button>
+    <button id="button2" data-property="isLarge">Toggle size</button>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {isRed:false, isLarge:false}
+      const toggle = (ev) => {
+        withState((state) => {
+          const p = ev.currentTarget.dataset.property
+          return {...state, [p]:!state[p]}
+        })
+      } 
+      const show = (state) => ({
+        button: {
+          onclick: toggle
+        }, 
+        "#p": {
+          "classList": {
+            "is-red": state.isRed
+          }, 
+          "style": {
+            fontSize: state.isLarge ? "32px" : "16px"
+          }
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

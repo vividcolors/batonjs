@@ -1,0 +1,51 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Multiple instances</title>
+  </head>
+  <body id="body">
+    <p class="p">Count 1: <span id="counter1"></span></p>
+    <p class="p">Count 2: <span id="counter2"></span></p>
+    <button id="button1" type="button">increment 1</button>
+    <button id="button2" type="button">increment 2</button>
+    <button id="button3" type="button">increment both</button>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state1 = {count:0}
+      const state2 = {count:0}
+      const increment1 = (ev) => {
+        withState1((state) => ({count: state.count + 1}))
+      }
+      const increment2 = (ev) => {
+        withState2((state) => ({count: state.count + 1}))
+      }
+      const increment3 = (ev) => {
+        withState1((state) => ({count: state.count + 1}))
+        withState2((state) => ({count: state.count + 1}))
+      }
+      const show1 = (state) => ({
+        "#counter1": {
+          innerText: state.count
+        }, 
+        "#button1": {
+          onclick: increment1
+        }, 
+        "#button3": {
+          onclick: increment3
+        }
+      })
+      const show2 = (state) => ({
+        "#counter2": {
+          innerText: state.count
+        }, 
+        "#button2": {
+          onclick: increment2
+        }
+      })
+
+      const withState1 = baton(state1, show1)
+      const withState2 = baton(state2, show2)
+    </script>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Creating web components</title>
+  </head>
+  <body id="body">
+    Password: <aa-password-input></aa-password-input><!-- This is our web-component. -->
+    <template id="tpl">
+      <div class="box" style="display:inline-block;">
+        <input type="password" />
+        <span></span>
+      </div>
+    </template>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+    <script type="module">
+      import {baton} from '../baton.js'
+      class PasswordInput extends HTMLElement {
+        constructor() {
+          super()
+          const tpl = document.getElementById('tpl')
+          const shadow = this.attachShadow({mode: 'open'})
+          shadow.appendChild(tpl.content.cloneNode(true))
+          this.scoreTable = {
+            0: {desc:"quite risky", color:"#FF0000"}, 
+            1: {desc:"risky", color:"#DD6600"}, 
+            2: {desc:"relatively risky", color:"#BBBB00"}, 
+            3: {desc:"safe", color:"#66DD00"}, 
+            4: {desc:"quite safe", color:"#00FF00"}
+          }
+          this.boundOninput = this.oninput.bind(this)
+        }
+        connectedCallback() {
+          const value = this.getAttribute('value')
+          const state = {value, score:-1}
+          const boundShow = this.show.bind(this)
+          this.withState = baton(state, boundShow, this.shadowRoot)
+        }
+        oninput(ev) {
+          const value = ev.currentTarget.value
+          this.withState((state) => ({...state, value}))
+          requestAnimationFrame(() => {
+            const result = zxcvbn(value)
+            this.withState((state) => ({...state, score:result.score}))
+          })
+        }
+        show(state) {
+          const score = (state.score == -1) ? null : this.scoreTable[state.score]
+          return {
+            "input": {
+              value: state.value, 
+              oninput: this.boundOninput
+            }, 
+            "span": {
+              textContent: state.score == -1 ? "" : score.desc, 
+              style: {
+                color: state.score == -1 ? "black" : score.color
+              }
+            }
+          }
+        }
+      }
+      customElements.define("aa-password-input", PasswordInput)
+    </script>
+  </body>
+</html>

@@ -1,0 +1,238 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Practical -- dynamic content, bootstrap-css integration, rest api</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="container">
+      <ul class="list-group"></ul>
+    </div>
+    <div class="dimmer" style="position:fixed;top:0;bottom:0;left:0;right:0;z-index:100;transition:opacity 0.2s linear;opacity:0;background:rgba(255,255,255,0.4);">
+      <div class="position-absolute top-50 start-50 translate-middle">
+        <div class="spinner-border " role="status"></div>
+      </div>
+    </div>
+    <div class="modal fade">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title">Edit Post <span class="edit-id"></span></div>
+            <button type="button" class="btn-close dismiss"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Title</label>
+              <input type="text" class="form-control" name="title" />
+            </div>
+            <div>
+              <label class="form-label">Body</label>
+              <textarea class="form-control" rows="10" name="body"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary dismiss">Cancel</button>
+            <button type="button" class="btn btn-primary commit">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div aria-live="polite" aria-atomic="true">
+      <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      </div>
+    </div>
+    <template id="post-tpl">
+      <li class="list-group-item post">
+        <div class="d-flex align-items-start">
+          <div class="id" style="width:32px;"></div>
+          <div class="title flex-grow-1"></div>
+        </div>
+        <div class="d-flex justify-content-end">
+          <a href="javascript:void(0);" class="edit px-1">Edit</a>
+          <a href="javascript:void(0);" class="delete text-danger px-1">Delete</a>
+        </div>
+      </li>
+    </template>
+    <template id="toast-tpl">
+      <div class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body"></div>
+          <button type="button" class="btn-close me-2 m-auto dismiss" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </template>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <script type="module">
+      // https://jsonplaceholder.typicode.com/
+      import {baton} from '../baton.js'
+      const backendApi = {
+        getPosts: async () => {
+          await new Promise((resolve) => {
+            setTimeout(() => {resolve()}, 1000)
+          })
+          return await fetch('https://jsonplaceholder.typicode.com/posts').then(response => response.json())
+        }, 
+        putPost: async (post) => {
+          await fetch('https://jsonplaceholder.typicode.com/posts/' + post.id, {
+            method: 'PUT',
+            body: JSON.stringify(post),
+            headers: {
+              'Content-type': 'application/json; charset=UTF-8',
+            },
+          })
+        }, 
+        deletePost: async (postId) => {
+          await fetch('https://jsonplaceholder.typicode.com/posts/' + postId, {
+            method: 'DELETE'
+          })
+        }
+      }
+      const bootstrapActions = {
+        openModal: (el, _name, newValue, oldValue) => {
+          const instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el, {backdrop:"static", keyboard:false})
+          if (newValue) {  // open
+            instance.show()
+          } else {
+            instance.hide()
+          }
+        }, 
+        openToast: (container, _name, newValue, oldValue) => {
+          if (newValue) {
+            const tpl = document.getElementById('toast-tpl')
+            const toast = tpl.content.cloneNode(true).firstElementChild
+            toast.querySelector('.toast-body').textContent = newValue[1]
+            container.appendChild(toast)
+            const instance = new bootstrap.Toast(toast)
+            instance.show()
+            setTimeout(() => {
+              toast.remove()
+            }, 10000)
+          }
+        }
+      }
+      const state = {
+        form: null, 
+        loadingLevel: 0, 
+        posts: [], 
+        notification: null  // null or [timestamp, message]
+      }
+      const actions = {
+        load: async () => {
+          withState((state) => ({...state, loadingLevel:state.loadingLevel + 1}))
+          const lis = document.querySelector('.list-group')
+          const posts = await backendApi.getPosts()
+          withState((state) => ({...state, loadingLevel:state.loadingLevel - 1, posts}))
+        }, 
+        onedit: (ev) => {
+          const idx = ev.currentTarget.closest('.post').dataset.index
+          withState(state => {
+            const post = {...state.posts[idx]}
+            return {...state, form:post}
+          })
+        }, 
+        ondismiss: (ev) => {
+          withState(state => ({...state, form:null}))
+        }, 
+        oncommit: async (ev) => {
+          let form = null
+          withState((state) => {
+            form = state.form
+            return {...state, form:null, loadingLevel:state.loadingLevel + 1}
+          })
+          await backendApi.putPost(form)
+          const posts = await backendApi.getPosts()
+          const notification = [Date.now(), `Post (ID=${form.id}) was updated.`]
+          withState((state) => {
+            return {...state, posts, notification, loadingLevel:state.loadingLevel - 1}
+          })
+        }, 
+        ondelete: async (ev) => {
+          const postEl = ev.currentTarget.closest('.post')
+          const idx = postEl.dataset.index
+          const postId = postEl.querySelector('.id').textContent
+          if (! confirm(`Post (ID=${postId}) will be deleted. Are you sure?`)) {
+            return
+          }
+          let post = null
+          withState((state => {
+            post = state.posts[idx]
+            return {...state, loadingLevel:state.loadingLevel + 1}
+          }))
+          await backendApi.deletePost(post.id)
+          const posts = await backendApi.getPosts()
+          const notification = [Date.now(), `Post (ID=${post.id}) was deleted.`]
+          withState((state) => {
+            return {...state, posts, notification, loadingLevel:state.loadingLevel - 1}
+          })
+        }, 
+        oninput: (ev) => {
+          const name = ev.currentTarget.name
+          const value = ev.currentTarget.value
+          withState((state) => {
+            const form = {...state.form, [name]:value}
+            return {...state, form}
+          })
+        }
+      }
+      const show = (state) => ({
+        ".dimmer": {
+          style: {
+            opacity: state.loadingLevel > 0 ? 1 : 0, 
+            "pointer-events": state.loadingLevel > 0 ? "auto" : "none"
+          }
+        }, 
+        ".modal": {
+          "@open": !!state.form, 
+          "onopen": bootstrapActions.openModal, 
+          ".edit-id": {
+            textContent: state.form && state.form.id
+          }, 
+          "input[name='title']": {
+            value: state.form && state.form.title, 
+            oninput: actions.oninput
+          }, 
+          "textarea[name='body']": {
+            value: state.form && state.form.body, 
+            oninput: actions.oninput
+          }, 
+          ".dismiss": {
+            onclick: actions.ondismiss
+          }, 
+          ".commit": {
+            onclick: actions.oncommit
+          }, 
+          "onhidePrevented.bs.modal": actions.ondismiss
+        }, 
+        ".toast-container": {
+          "@open": state.notification, 
+          "onopen": bootstrapActions.openToast
+        }, 
+        ".post": (el) => {
+          const idx = el.dataset.index
+          const enabled = (idx < state.posts.length)
+          const post = enabled ? state.posts[idx] : null
+          return {
+            "classList": {
+              "d-none": !enabled, 
+              "d-block": enabled
+            }, 
+            ".id": {textContent: enabled ? post.id : ""}, 
+            ".title": {textContent: enabled ? post.title : ""}, 
+            ".edit": {onclick:actions.onedit}, 
+            ".delete": {onclick:actions.ondelete}
+          }
+        }
+      })
+      const lis = document.querySelector('.list-group')
+      const tpl = document.getElementById('post-tpl')
+      for (let i = 0; i < 100; i++) {
+        const li = tpl.content.cloneNode(true).firstElementChild
+        li.dataset.index = i
+        lis.appendChild(li)
+      }
+      const withState = baton(state, show)
+      actions.load()
+    </script>
+  </body>
+</html>

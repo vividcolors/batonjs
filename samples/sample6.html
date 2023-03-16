@@ -2,17 +2,29 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Simple counter</title>
+    <title>Declaration as function</title>
   </head>
   <body id="body">
-    <p id="p">Count: <span id="counter"></span></p>
+    <ul>
+      <li data-k="1">x * 1 = <span></span></li>
+      <li data-k="2">x * 2 = <span></span></li>
+      <li data-k="3">x * 3 = <span></span></li>
+      <li data-k="4">x * 4 = <span></span></li>
+      <li data-k="5">x * 5 = <span></span></li>
+      <li data-k="6">x * 6 = <span></span></li>
+    </ul>
     <button id="theButton" type="button">increment</button>
     <script type="module">
       import {baton} from '../baton.js'
       const state = {count:0}
       const show = (state) => ({
-        "#counter": {
-          innerText: state.count
+        "li": (el, i) => {
+          const k = +(el.dataset.k)
+          return {
+            "span" : {
+              innerText: state.count * k
+            }
+          }
         }
       })
       document.getElementById('theButton').addEventListener('click', (ev) => {

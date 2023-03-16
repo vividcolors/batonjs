@@ -1,0 +1,44 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nested selectors</title>
+  </head>
+  <body id="body">
+    <div class="level-1">
+      <p>x * 1 = <span></span></p>
+      <div class="level-2">
+        <p>x * 2 = <span></span></p>
+        <div class="level-3">
+          <p>x * 3 = <span></span></p>
+        </div>
+      </div>
+    </div>
+    <button id="theButton" type="button">increment</button>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {count:0}
+      const show = (state) => ({
+        ".level-1": {
+          ":scope > p > span": {
+            innerText: state.count
+          }, 
+          ".level-2": {
+            ":scope > p > span": {
+              innerText: state.count * 2
+            }, 
+            ".level-3": {
+              ":scope > p > span": {
+                innerText: state.count * 3
+              }
+            }
+          }
+        }
+      })
+      document.getElementById('theButton').addEventListener('click', (ev) => {
+        withState(state => ({count: state.count + 1}))
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

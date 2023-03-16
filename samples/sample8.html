@@ -1,0 +1,41 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Uncontrolled inputs</title>
+  </head>
+  <body id="body">
+    <form id="form">
+      Name: <input type="text" name="name" /><br />
+      Sex: <label><input type="radio" name="sex" value="Male" />Male</label><label><input type="radio" name="sex" value="Female" />Female</label><br />
+      Age: <select name="age"><option value="..9">..9</option><option value="10..19">10..19</option><option value="20..29">20..29</option><option value="30..39">30..39</option><option value="40..59">40..59</option><option value="60..">60..</option></select><br />
+      Bread Lover: <input type="checkbox" name="breadLover" data-type="bool" /><br />
+      <button id="collect" type="submit">Submit</button>
+    </form>
+    <textarea id="echo"></textarea>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {}
+      const onsubmit = (ev) => {
+        ev.preventDefault()
+        withState((_state) => {
+          const data = new FormData(ev.currentTarget)
+          const state = {}
+          for (let [name, value] of data) {
+            state[name] = value
+          }
+          return state
+        })
+      }
+      const show = (state) => ({
+        "#form": {
+          onsubmit: onsubmit
+        }, 
+        "#echo": {
+            value: JSON.stringify(state)
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
