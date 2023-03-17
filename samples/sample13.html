@@ -6,21 +6,20 @@
   </head>
   <body id="body">
     Password: <aa-password-input></aa-password-input><!-- This is our web-component. -->
-    <template id="tpl">
-      <div class="box" style="display:inline-block;">
-        <input type="password" />
-        <span></span>
-      </div>
-    </template>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
     <script type="module">
       import {baton} from '../baton.js'
       class PasswordInput extends HTMLElement {
         constructor() {
           super()
-          const tpl = document.getElementById('tpl')
+
           const shadow = this.attachShadow({mode: 'open'})
-          shadow.appendChild(tpl.content.cloneNode(true))
+          const input = document.createElement('input')
+          input.type = 'password'
+          shadow.appendChild(input)
+          const span = document.createElement('span')
+          shadow.appendChild(span)
+          
           this.scoreTable = {
             0: {desc:"quite risky", color:"#FF0000"}, 
             1: {desc:"risky", color:"#DD6600"}, 
