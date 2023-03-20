@@ -138,21 +138,23 @@ export const baton = (state, show, baseEl = null) => {
   return withState
 }
 
-export const cssTransition = (baseClass, stateClass) => {
+export const cssTransition = (baseClass, options) => {
   return (el, name, value, oldValue) => {
+    const targetEl = (options.target) ? el.querySelector(options.target) : el
     const action = (value) ? 'enter' : 'exit'
     el.classList.add(`${baseClass}-${action}`)
     const cleanup = (ev) => {
       if (ev && ev.target !== el) return
-      el.classList[value ? "add" : "remove"](stateClass)
+      if (options.stateClass) el.classList[value ? "add" : "remove"](options.stateClass)
+      if (options.stateProp) el[options.stateProp] = !!value
       el.classList.remove(`${baseClass}-${action}`)
       el.classList.remove(`${baseClass}-${action}-active`)
+      targetEl.removeEventListener('transitionend', cleanup)
     }
     window.setTimeout(() => {
       el.classList.add(`${baseClass}-${action}-active`)
-      el.addEventListener('transitionend', cleanup)
-      window.setTimeout(cleanup, 800)
+      targetEl.addEventListener('transitionend', cleanup)
+      window.setTimeout(cleanup, 10000)
     }, 100)
-
   }
 }

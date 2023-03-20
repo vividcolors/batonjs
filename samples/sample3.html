@@ -45,10 +45,10 @@
         background: #FFFFFF;
       }
       .modal.transition-enter > .modal-frame {
-        transform: scale(0);
+        transform: scale(0.5);
       }
       .modal.transition-enter-active > .modal-frame {
-        transition: transform 0.2s linear 0.1s;
+        transition: transform 0.2s linear;
         transform: scale(1);
       }
       .modal.transition-exit > .modal-frame {
@@ -68,7 +68,7 @@
     </div>
     <script type="module">
       import {baton, cssTransition} from '../baton.js'
-      const onopen = cssTransition('transition', 'is-open')
+      const onopen = cssTransition('transition', {stateClass:'is-open'})
       const state = {modalOpen:false}
       const openModal = (ev) => {
         withState((state) => ({modalOpen:true}))
