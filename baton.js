@@ -137,3 +137,22 @@ export const baton = (state, show, baseEl = null) => {
 
   return withState
 }
+
+export const cssTransition = (baseClass, stateClass) => {
+  return (el, name, value, oldValue) => {
+    const action = (value) ? 'enter' : 'exit'
+    el.classList.add(`${baseClass}-${action}`)
+    const cleanup = (ev) => {
+      if (ev && ev.target !== el) return
+      el.classList[value ? "add" : "remove"](stateClass)
+      el.classList.remove(`${baseClass}-${action}`)
+      el.classList.remove(`${baseClass}-${action}-active`)
+    }
+    window.setTimeout(() => {
+      el.classList.add(`${baseClass}-${action}-active`)
+      el.addEventListener('transitionend', cleanup)
+      window.setTimeout(cleanup, 800)
+    }, 100)
+
+  }
+}
