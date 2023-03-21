@@ -156,22 +156,24 @@ export const baton = (state, show, baseEl = null) => {
 }
 
 /**
- * options.target  -- the descendant element which plays the transition.
- * options.stateClass  -- the css class name which will be added/removed after transition.
- * options.steteProp  -- the property name to which will be set after transition.
+ * options.target: css-selector
+ * options.onstart: callback
+ * options.onfinish: callback
  */
-export const cssTransition = (baseClass, options) => {
+export const cssTransition = (baseClass, options = {}) => {
   return (el, name, value, oldValue) => {
+    if (options.onstart) options.onstart(el, name, value, oldValue)
     const targetEl = (options.target) ? el.querySelector(options.target) : el
     const action = (value) ? 'enter' : 'exit'
     el.classList.add(`${baseClass}-${action}`)
+    let cleaned = false
     const cleanup = (ev) => {
       if (ev && ev.target !== targetEl) return
-      if (options.stateClass) el.classList[value ? "add" : "remove"](options.stateClass)
-      if (options.stateProp) el[options.stateProp] = !!value
-      el.classList.remove(`${baseClass}-${action}`)
-      el.classList.remove(`${baseClass}-${action}-active`)
+      if (cleaned) return
+      cleaned = true
+      el.classList.remove(`${baseClass}-${action}`, `${baseClass}-${action}-active`)
       targetEl.removeEventListener('transitionend', cleanup)
+      if (options.onfinish) options.onfinish(el, name, value, oldValue)
     }
     window.setTimeout(() => {
       el.classList.add(`${baseClass}-${action}-active`)
@@ -180,4 +182,3 @@ export const cssTransition = (baseClass, options) => {
     }, 100)
   }
 }
-

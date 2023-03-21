@@ -68,7 +68,7 @@
     </div>
     <script type="module">
       import {baton, cssTransition} from '../baton.js'
-      const onopen = cssTransition('transition', {stateClass:'is-open'})
+      const onopen = cssTransition('transition')
       const state = {modalOpen:false}
       const openModal = (ev) => {
         withState((state) => ({modalOpen:true}))
@@ -84,8 +84,8 @@
           onclick: closeModal
         }, 
         ".modal": {
-          "@open": state.modalOpen, 
-          "onopen": onopen
+          "class-is-open": state.modalOpen, 
+          "&class-is-open": onopen
         }
       })
       const withState = baton(state, show)

@@ -39,19 +39,26 @@
     </style>
     <script type="module">
       import {baton, cssTransition} from '../baton.js'
-      const onopen0 = cssTransition('transition', {stateProp: 'open', target: 'p'})
-      const onopen = (el, name, newValue, oldValue) => {
-        const p = el.querySelector('p')
-        if (newValue) {
-          el.open = true
-          const rect = p.getBoundingClientRect()  // TODO: p.scrollHeight
-          p.style.setProperty("--height", rect.height + "px")
-        } else {
-          const rect = p.getBoundingClientRect()
-          p.style.setProperty("--height", rect.height + "px")
+      const onopenOptions = {
+        target: 'p', 
+        onstart: (el, name, newValue, oldValue) => {
+          const p = el.querySelector('p')
+          if (newValue) {
+            el.open = true
+            const rect = p.getBoundingClientRect()  // TODO: p.scrollHeight
+            p.style.setProperty("--height", p.scrollHeight + "px")
+          } else {
+            const rect = p.getBoundingClientRect()
+            p.style.setProperty("--height", p.scrollHeight + "px")
+          }
+        }, 
+        onfinish: (el, name, newValue, oldValue) => {
+          if (! newValue) {
+            el.open = false
+          }
         }
-        onopen0(el, name, newValue, oldValue)
       }
+      const onopen = cssTransition('transition', onopenOptions)
       const state = {openPart:null}
       const switchPart = (ev) => {
         ev.preventDefault()
@@ -59,8 +66,8 @@
       }
       const show = (state) => ({
         details: (el) => ({
-          "@open": el.dataset.name == state.openPart, 
-          "onopen": onopen, 
+          "class-is-open": el.dataset.name == state.openPart, 
+          "&class-is-open": onopen, 
           'summary': {
             "onclick": switchPart
           }
