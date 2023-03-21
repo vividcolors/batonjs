@@ -101,7 +101,8 @@
           if (newValue) {
             const tpl = document.getElementById('toast-tpl')
             const toast = tpl.content.cloneNode(true).firstElementChild
-            toast.querySelector('.toast-body').textContent = newValue[1]
+            const message = newValue.split(':', 2)[1]
+            toast.querySelector('.toast-body').textContent = message
             container.appendChild(toast)
             const instance = new bootstrap.Toast(toast)
             instance.show()
@@ -115,7 +116,7 @@
         form: null, 
         loadingLevel: 0, 
         posts: [], 
-        notification: null  // null or [timestamp, message]
+        notification: null  // null or `${timestamp}:${message}`
       }
       const actions = {
         load: async () => {
@@ -142,7 +143,7 @@
           })
           await backendApi.putPost(form)
           const posts = await backendApi.getPosts()
-          const notification = [Date.now(), `Post (ID=${form.id}) was updated.`]
+          const notification = `${Date.now()}:Post (ID=${form.id}) was updated.`
           withState((state) => {
             return {...state, posts, notification, loadingLevel:state.loadingLevel - 1}
           })
@@ -161,7 +162,7 @@
           }))
           await backendApi.deletePost(post.id)
           const posts = await backendApi.getPosts()
-          const notification = [Date.now(), `Post (ID=${post.id}) was deleted.`]
+          const notification = `${Date.now()}:Post (ID=${post.id}) was deleted.`
           withState((state) => {
             return {...state, posts, notification, loadingLevel:state.loadingLevel - 1}
           })
@@ -205,8 +206,8 @@
           "onhidePrevented.bs.modal": actions.ondismiss
         }, 
         ".toast-container": {
-          "@open": state.notification, 
-          "onopen": bootstrapActions.openToast
+          "data-notification": state.notification, 
+          "&data-notification": bootstrapActions.openToast
         }, 
         ".post": (el) => {
           const idx = el.dataset.index

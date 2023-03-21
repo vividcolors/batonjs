@@ -17,6 +17,7 @@ export const baton = (state, show, baseEl = null) => {
       const value = decls[name]
       if (name == "attributes" || name == "classList" || name == "dataset" || name == "style" ||  // special properties
           (name[0] == 'o' && name[1] == 'n') ||  // event handlers
+          (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') ||  // data attributes
           (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') ||  // css class
           (name[0] == '@') ||  // virtual properties
           (name[0] == '&') ||  // update handler
@@ -76,6 +77,19 @@ export const baton = (state, show, baseEl = null) => {
             }
           }
           el.batonVirtual[dataName] = value
+        }
+        else if (name[0] == '&') {  // case: update handler
+          // we just ignore it
+        }
+        else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
+          const oldValue = el.getAttribute(name)
+          if (oldValue !== value) {
+            if (value === "" || value === null) el.removeAttribute(name) 
+            else el.setAttribute(name, value)
+            if (props["&" + name]) {
+              props["&" + name](el, name, value, oldValue)
+            }
+          }
         }
         else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
           const cname = name.slice(6)
