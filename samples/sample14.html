@@ -213,10 +213,8 @@
           const enabled = (idx < state.posts.length)
           const post = enabled ? state.posts[idx] : null
           return {
-            "classList": {
-              "d-none": !enabled, 
-              "d-block": enabled
-            }, 
+            "class-d-none": !enabled, 
+            "class-d-block": enabled, 
             ".id": {textContent: enabled ? post.id : ""}, 
             ".title": {textContent: enabled ? post.title : ""}, 
             ".edit": {onclick:actions.onedit}, 

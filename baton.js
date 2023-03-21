@@ -17,7 +17,9 @@ export const baton = (state, show, baseEl = null) => {
       const value = decls[name]
       if (name == "attributes" || name == "classList" || name == "dataset" || name == "style" ||  // special properties
           (name[0] == 'o' && name[1] == 'n') ||  // event handlers
+          (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') ||  // css class
           (name[0] == '@') ||  // virtual properties
+          (name[0] == '&') ||  // update handler
           !((value !== null && typeof value == "object") || typeof value == "function")) {  // they are element declaration
         // property declaration
         props[name] = value
@@ -74,6 +76,21 @@ export const baton = (state, show, baseEl = null) => {
             }
           }
           el.batonVirtual[dataName] = value
+        }
+        else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
+          const cname = name.slice(6)
+          const contained = el.classList.contains(cname)
+          if (value) {
+            el.classList.add(cname)
+            if (!contained && props["&" + name]) {
+              props["&" + name](el, name, true, false)
+            }
+          } else {
+            el.classList.remove(cname)
+            if (contained && props["&" + name]) {
+              props["&" + name](el, name, false, true)
+            }
+          }
         }
         else if (name == "classList") {  // case: classList property
           for (let c in value) {
