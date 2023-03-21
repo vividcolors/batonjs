@@ -196,3 +196,38 @@ export const cssTransition = (baseClass, options = {}) => {
     }, 100)
   }
 }
+
+export const throttle = (fn, delay) => {
+  let timerId = null
+  let lastExecTime = 0
+  return (...args) => {
+    let elapsedTime = performance.now() - lastExecTime
+    const execute = () => {
+      fn(...args)
+      lastExecTime = performance.now()
+    }
+    if (!timerId) {
+      execute()
+    }
+    if (timerId) {
+      clearTimeout(timerId)
+    }
+    if (elapsedTime > delay) {
+      execute()
+    } else {
+      timerId = setTimeout(execute, delay)
+    }
+  }
+}
+
+export const debounce = (fn, interval) => {
+  let timerId = null
+  return (...args) => {
+    if (timerId) {
+      clearTimeout(timerId)
+    }
+    timerId = setTimeout(() => {
+      fn(...args)
+    }, interval);
+  }
+}
