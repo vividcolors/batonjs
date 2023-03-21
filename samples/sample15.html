@@ -45,12 +45,8 @@
           const p = el.querySelector('p')
           if (newValue) {
             el.open = true
-            const rect = p.getBoundingClientRect()  // TODO: p.scrollHeight
-            p.style.setProperty("--height", p.scrollHeight + "px")
-          } else {
-            const rect = p.getBoundingClientRect()
-            p.style.setProperty("--height", p.scrollHeight + "px")
           }
+          p.style.setProperty("--height", p.scrollHeight + "px")
         }, 
         onfinish: (el, name, newValue, oldValue) => {
           if (! newValue) {
