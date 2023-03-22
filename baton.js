@@ -15,17 +15,8 @@ export const baton = (state, show, baseEl = null) => {
   const collectTasks = (decls, el, props) => {
     for (let name in decls) {
       const value = decls[name]
-      if ((name[0] == 'o' && name[1] == 'n') ||  // event handlers
-          (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') ||  // data attributes
-          (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') ||  // css class
-          (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') ||  // style
-          (name[0] == '@') ||  // virtual properties
-          (name[0] == '&') ||  // update handler
-          !((value !== null && typeof value == "object") || typeof value == "function")) {  // they are element declaration
-        // TODO: We can optimise this criteria. object rhs is element declaration, function rhs except for event handler and update handler is element declaration, otherwise it is attribute declaration
-        // property declaration
-        props[name] = value
-      } else {
+      if ((value !== null && typeof value == "object") || 
+          (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
         // element declaration
         const subEls = el.querySelectorAll(name)
         for (let i = 0; i < subEls.length; i++) {
@@ -35,6 +26,9 @@ export const baton = (state, show, baseEl = null) => {
           tasks.push({el:subEl, props:subProps})
           collectTasks(subDecls, subEls[i], subProps)
         }
+      } else {
+        // property declaration
+        props[name] = value
       }
     }
   }
@@ -135,7 +129,6 @@ export const baton = (state, show, baseEl = null) => {
               name !== "translate") {
             value = value == null ? "" : value
             const oldValue = el[name]
-            console.log('property', name, value)
             if (oldValue !== value) {
               el[name] = value
               if (props["&" + name]) {
@@ -144,7 +137,6 @@ export const baton = (state, show, baseEl = null) => {
             }
           } else {
             const oldValue = el.getAttribute(name)
-            console.log('attribute', name, value)
             if (oldValue !== value) {
               if (value != null && value !== false) el.setAttribute(name, value)
               else el.removeAttribute(name)
