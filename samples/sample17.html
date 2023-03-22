@@ -1,0 +1,137 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dropdown</title>
+  </head>
+  <body>
+    <style>
+      .dropdown {
+        display: none;
+        position: fixed;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
+        background: white;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .dropdown[data-caller-id], .dropdown.transition-exit-before {
+        display: block;
+        left: var(--left, -10000px);
+        top: var(--top, -10000px);
+        bottom: var(--bottom, auto);
+      }
+      .dropdown.transition-enter {
+        transition: height 0.2s linear;
+        display: block;
+        height: 0;
+      }
+      .dropdown.transition-enter-active {
+        height: var(--height);
+      }
+      .dropdown.transition-exit {
+        transition: height 0.2s linear;
+        display: block;
+        height: var(--height);
+        left: var(--left, -10000px);
+        top: var(--top, -10000px);
+        bottom: var(--bottom, auto);
+      }
+      .dropdown.transition-exit-active {
+        height: 0;
+      }
+    </style>
+    <button type="button" class="button" id="openButton" data-target="myDropdown">Open Dropdown</button>
+    <p style="padding-top:80vh; padding-left:80vw;">
+      ...
+      <button type="button" class="button" id="openButton2" data-target="myDropdown">Open Dropdown</button>
+    </p>
+    <p style="padding-top:20vh; padding-left:40vw;">
+      ...
+      <button type="button" class="button" id="openButton3" data-target="myDropdown">Open Dropdown</button>
+    </p>
+    <div class="dropdown" id="myDropdown">
+      <div style="padding:5px;">
+        <p style="color:green;">Here dropdown is.</p>
+        <button type="button" id="commandButton">Do something and close dropdown</button>
+      </div>
+    </div>
+    <script type="module">
+      import {baton, cssTransition} from '../baton.js'
+      const computeDropdownPosition = (callerEl, dropdownSize) => {
+        const callerRect = callerEl.getBoundingClientRect()
+        const left = (callerRect.left + dropdownSize.width <= window.innerWidth) ? callerRect.left  // aligns with button left
+                   : (callerRect.right - dropdownSize.width >= 0) ? (callerRect.right - dropdownSize.width)  // aligns with button right
+                   : (window.innerWidth - dropdownSize.width) * 0.5  // aligns with window center
+        const [top, bottom] = (callerRect.bottom + dropdownSize.height <= window.innerHeight) ? [callerRect.bottom, "auto"]  // below of button
+                  : (callerRect.top - dropdownSize.height >= 0) ? ["auto", window.innerHeight - callerRect.top]  // above of button
+                  : [0, "auto"]  // top of window
+        return {
+          left: left + 'px', 
+          top: top != "auto" ? top + 'px' : top, 
+          bottom: bottom != "auto" ? bottom + 'px' : bottom
+        } 
+      }
+      const dropdownTransition = cssTransition("transition", {
+        onstart: (el, name, value, oldValue) => {
+          const rect = el.getBoundingClientRect()
+          el.style.setProperty('--height', rect.height + 'px')
+          if (value) {
+            const callerEl = document.getElementById(value)
+            const {left, top, bottom} = computeDropdownPosition(callerEl, rect)
+            el.style.setProperty('--left', left)
+            el.style.setProperty('--top', top)
+            el.style.setProperty('--bottom', bottom)
+          }
+        }
+      })
+      const state = {activeDropdownId: null, activeCallerId: null}
+      const ontoggle = (ev) => {
+        withState(state => {
+          const activeCallerId = ev.target.id
+          const activeDropdownId = ev.target.dataset.target
+          if (activeCallerId === state.activeCallerId) {
+            // close
+            return {activeCallerId: null, activeDropdownId: null}
+          } else {
+            // open
+            withState(state => ({activeCallerId, activeDropdownId}))
+          }
+        })
+      }
+      const onouterclick = (ev) => {
+        withState((state) => {
+          if (state.activeCallerId) {
+            if (ev.target.closest('#' + state.activeCallerId) || ev.target.closest('#' + state.activeDropdownId)) {
+              // ignore click; because this click occurred in the dropdown, or in the caller element
+            } else {
+              // close dropdown
+              withState(state => ({activeCallerId: null, activeDropdownId: null}))
+            }
+          }
+        })
+      }
+      const oncommand = (ev) => {
+        window.alert('Command executed!!')
+        setTimeout(() => {
+          withState(state => ({activeCallerId: null, activeDropdownId: null}))
+        }, 500)
+      }
+      const show = (state) => {
+        return {
+          ".button": {
+            onclick: ontoggle
+          }, 
+          "#commandButton": {
+            onclick: oncommand
+          }, 
+          ".dropdown": (el) => ({
+            "data-caller-id": state.activeDropdownId === el.id ? state.activeCallerId : null, 
+            "&data-caller-id": dropdownTransition
+          })
+        }
+      }
+      const withState = baton(state, show)
+      document.body.addEventListener('click', onouterclick)
+    </script>
+  </body>
+</html>
