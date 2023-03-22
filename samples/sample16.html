@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Scroll Animation</title>
+  </head>
+  <body>
+    <style>
+      .box {
+        margin: 50vh 0;
+        transition: transform 0.4s linear, opacity 0.4s linear;
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      .box.is-shown {
+        transform: none;
+        opacity: 1;
+      }
+      .box img {
+        max-width: 100%;
+        object-fit: contain;
+        display: block;
+      }
+    </style>
+    <div class="box" id="box1">
+      <img src="https://picsum.photos/seed/box1/800/450" />
+    </div>
+    <div class="box" id="box2">
+      <img src="https://picsum.photos/seed/box2/800/450" />
+    </div>
+    <div class="box" id="box3">
+      <img src="https://picsum.photos/seed/box3/800/450" />
+    </div>
+    <script type="module">
+      import {baton, throttle, debounce} from '../baton.js'
+      const state = {windowHeight:null, scroll:null, tops:{box1:null, box2:null, box3:null}}
+      const onscroll = (ev) => {
+        const scroll = window.pageYOffset || document.documentElement.scrollTop
+        withState(state => ({...state, scroll}))
+      }
+      const onreset = (ev) => {
+        const windowHeight = window.innerHeight
+        const scroll = window.pageYOffset || document.documentElement.scrollTop
+        const tops = {box1:null, box2:null, box3:null}
+        for (let id in tops) {
+          const el = document.getElementById(id)
+          tops[id] = el.getBoundingClientRect().top + scroll
+        }
+        withState(state => ({windowHeight, scroll, tops}))
+      }
+      const show = (state) => {
+        return {
+          ".box": (el) => {
+            return {
+              "class-is-shown": state.tops[el.id] && (state.scroll + state.windowHeight > state.tops[el.id] + 100)
+            }
+          }
+        }
+      }
+      const withState = baton(state, show)
+      document.addEventListener('scroll', throttle(onscroll, 100))
+      window.addEventListener('resize', debounce(onreset, 400))
+      window.addEventListener('load', onreset)
+    </script>
+  </body>
+</html>

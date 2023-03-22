@@ -1,0 +1,75 @@
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>jQuery's slideUp/Down</title>
+    <details data-name="short">
+      <summary>Short Part</summary>
+      <p>This is a short part.</p>
+    </details>
+    <details data-name="long">
+      <summary>Long Part</summary>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    </details>
+  </head>
+  <body id="body">
+    <style>
+      details {
+        overflow: hidden;
+        max-width: 500px;
+      }
+      details p {
+        margin: 0 !important;
+        height: auto;
+      }
+      details.transition-enter p {
+        transition: height 0.2s linear;
+        height: 0;
+      }
+      details.transition-enter-active p {
+        height: var(--height);
+      }
+      details.transition-exit p {
+        transition: height 0.2s linear;
+        height: var(--height);
+      }
+      details.transition-exit-active p {
+        height: 0;
+      }
+    </style>
+    <script type="module">
+      import {baton, cssTransition} from '../baton.js'
+      const onopenOptions = {
+        target: 'p', 
+        onstart: (el, name, newValue, oldValue) => {
+          const p = el.querySelector('p')
+          if (newValue) {
+            el.open = true
+          }
+          p.style.setProperty("--height", p.scrollHeight + "px")
+        }, 
+        onfinish: (el, name, newValue, oldValue) => {
+          if (! newValue) {
+            el.open = false
+          }
+        }
+      }
+      const onopen = cssTransition('transition', onopenOptions)
+      const state = {openPart:null}
+      const switchPart = (ev) => {
+        ev.preventDefault()
+        withState(state => ({openPart:ev.target.parentNode.dataset.name}))
+      }
+      const show = (state) => ({
+        details: (el) => ({
+          "class-is-open": el.dataset.name == state.openPart, 
+          "&class-is-open": onopen, 
+          'summary': {
+            "onclick": switchPart
+          }
+        })
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
