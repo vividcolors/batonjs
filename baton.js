@@ -173,26 +173,30 @@ export const baton = (state, show, baseEl = null) => {
  * options.target: css-selector
  * options.onstart: callback
  * options.onfinish: callback
+ * options.timeout: number
  */
 export const cssTransition = (baseClass, options = {}) => {
   return (el, name, value, oldValue) => {
-    if (options.onstart) options.onstart(el, name, value, oldValue)
     const targetEl = (options.target) ? el.querySelector(options.target) : el
     const action = (value) ? 'enter' : 'exit'
+    el.classList.add(`${baseClass}-${action}-before`)
+    if (options.onstart) options.onstart(el, name, value, oldValue)
+    el.classList.remove(`${baseClass}-${action}-before`)
     el.classList.add(`${baseClass}-${action}`)
     let cleaned = false
     const cleanup = (ev) => {
       if (ev && ev.target !== targetEl) return
       if (cleaned) return
       cleaned = true
-      el.classList.remove(`${baseClass}-${action}`, `${baseClass}-${action}-active`)
+      el.classList.remove(`${baseClass}-${action}-active`)
+      el.classList.remove(`${baseClass}-${action}`)
       targetEl.removeEventListener('transitionend', cleanup)
       if (options.onfinish) options.onfinish(el, name, value, oldValue)
     }
     window.setTimeout(() => {
       el.classList.add(`${baseClass}-${action}-active`)
       targetEl.addEventListener('transitionend', cleanup)
-      window.setTimeout(cleanup, 10000)
+      window.setTimeout(cleanup, options.timeout || 10000)
     }, 100)
   }
 }
