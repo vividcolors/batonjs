@@ -125,7 +125,7 @@
             onclick: oncommand
           }, 
           ".dropdown": (el) => ({
-            "data-caller-id": state.activeDropdownId === el.id ? state.activeCallerId : null, 
+            "data-caller-id": state.activeDropdownId === el.id ? state.activeCallerId : "", 
             "&data-caller-id": dropdownTransition
           })
         }

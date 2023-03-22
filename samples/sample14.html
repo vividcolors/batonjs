@@ -178,10 +178,8 @@
       }
       const show = (state) => ({
         ".dimmer": {
-          style: {
-            opacity: state.loadingLevel > 0 ? 1 : 0, 
-            "pointer-events": state.loadingLevel > 0 ? "auto" : "none"
-          }
+          "style-opacity": state.loadingLevel > 0 ? 1 : 0, 
+          "style-pointer-events": state.loadingLevel > 0 ? "auto" : "none"
         }, 
         ".modal": {
           "@open": !!state.form, 
