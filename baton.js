@@ -15,16 +15,8 @@ export const baton = (state, show, baseEl = null) => {
   const collectTasks = (decls, el, props) => {
     for (let name in decls) {
       const value = decls[name]
-      if (name == "attributes" || name == "classList" || name == "dataset" || name == "style" ||  // special properties
-          (name[0] == 'o' && name[1] == 'n') ||  // event handlers
-          (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') ||  // data attributes
-          (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') ||  // css class
-          (name[0] == '@') ||  // virtual properties
-          (name[0] == '&') ||  // update handler
-          !((value !== null && typeof value == "object") || typeof value == "function")) {  // they are element declaration
-        // property declaration
-        props[name] = value
-      } else {
+      if ((value !== null && typeof value == "object") || 
+          (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
         // element declaration
         const subEls = el.querySelectorAll(name)
         for (let i = 0; i < subEls.length; i++) {
@@ -34,6 +26,9 @@ export const baton = (state, show, baseEl = null) => {
           tasks.push({el:subEl, props:subProps})
           collectTasks(subDecls, subEls[i], subProps)
         }
+      } else {
+        // property declaration
+        props[name] = value
       }
     }
   }
@@ -42,23 +37,23 @@ export const baton = (state, show, baseEl = null) => {
     while (tasks.length) {
       const {el, props} = tasks.shift()
       for (let name in props) {
-        const value = props[name]
+        let value = props[name]
         if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
           const eventType = name.slice(2)
-          if (! el.batonEhs) {
-            el.batonEhs = {}
+          if (! el.batonEhcache) {
+            el.batonEhcache = {}
           }
-          if (el.batonEhs[eventType]) {
-            if (el.batonEhs[eventType] !== value) {
+          if (el.batonEhcache[name]) {
+            if (el.batonEhcache[name] !== value) {
               // handler changed
-              el.removeEventListener(eventType, el.batonEhs[eventType])
+              el.removeEventListener(eventType, el.batonEhcache[name])
               el.addEventListener(eventType, value)
-              el.batonEhs[eventType] = value
+              el.batonEhcache[name] = value
             }
           } else {
             // new handler
             el.addEventListener(eventType, value)
-            el.batonEhs[eventType] = value
+            el.batonEhcache[name] = value
           }
         }
         else if (name[0] == '@') {  // case: virtual property
@@ -82,59 +77,44 @@ export const baton = (state, show, baseEl = null) => {
           // we just ignore it
         }
         else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
-          const oldValue = el.getAttribute(name)
-          if (oldValue !== value) {
-            if (value === "" || value === null) el.removeAttribute(name) 
-            else el.setAttribute(name, value)
-            if (props["&" + name]) {
-              props["&" + name](el, name, value, oldValue)
-            }
-          }
+          value = "" + value
+          if (value === "") el.removeAttribute(name) 
+          else el.setAttribute(name, value)
         }
         else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
           const cname = name.slice(6)
-          const contained = el.classList.contains(cname)
-          if (value) {
-            el.classList.add(cname)
-            if (!contained && props["&" + name]) {
-              props["&" + name](el, name, true, false)
-            }
+          if (value) el.classList.add(cname)
+          else el.classList.remove(cname)
+        }
+        else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
+          const sname = name.slice(6)
+          value = "" + value
+          if (value === "" || value === null) el.style.removeProperty(sname)
+          else el.style.setProperty(sname, value)
+        }
+        else {  // otherwise: common attributes
+          if (name in el) {
+            value = value == null ? "" : value
+            el[name] = value
           } else {
-            el.classList.remove(cname)
-            if (contained && props["&" + name]) {
-              props["&" + name](el, name, false, true)
-            }
+            if (value != null && value !== false) el.setAttribute(name, value)
+            else el.removeAttribute(name)
           }
         }
-        else if (name == "classList") {  // case: classList property
-          for (let c in value) {
-            if (value[c]) {
-              el.classList.add(c)
-            } else {
-              el.classList.remove(c)
+
+        // trigger update observer
+        const observerName = "&" + name
+        if (props[observerName]) {
+          if (! el.batonCache) {
+            el.batonCache = {}
+          }
+          if (name in el.batonCache) {
+            const oldValue = el.batonCache[name]
+            if (oldValue !== value) {
+              props[observerName](el, name, value, oldValue)
             }
           }
-        }
-        else if (name == "attributes") {  // case: attributes property
-          for (let a in value) {
-            if (typeof value[a] === "undefined") {
-              el.removeAttribute(a)
-            } else {
-              el.setAttribute(a, value[a])
-            }
-          }
-        }
-        else if (value !== null && typeof value == "object") {  // case: object property
-          for (let x in value) {
-            if (typeof value[x] === "undefined") {
-              delete el[name]
-            } else {
-              el[name][x] = value[x]
-            }
-          }
-        }
-        else {  // case: scalar property
-          el[name] = value
+          el.batonCache[name] = value
         }
       }
     }

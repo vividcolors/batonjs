@@ -27,9 +27,7 @@
         }, 
         "#p": {
           "class-is-red": state.isRed, 
-          "style": {
-            fontSize: state.isLarge ? "32px" : "16px"
-          }
+          "style-font-size": state.isLarge ? "32px" : "16px"
         }
       })
       const withState = baton(state, show)
