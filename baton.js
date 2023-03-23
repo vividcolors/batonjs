@@ -40,26 +40,20 @@ export const baton = (state, show, baseEl = null) => {
         let value = props[name]
         if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
           const eventType = name.slice(2)
-          if (! el.batonEhs) {
-            el.batonEhs = {}
+          if (! el.batonEhcache) {
+            el.batonEhcache = {}
           }
-          if (el.batonEhs[eventType]) {
-            if (el.batonEhs[eventType] !== value) {
+          if (el.batonEhcache[name]) {
+            if (el.batonEhcache[name] !== value) {
               // handler changed
-              el.removeEventListener(eventType, el.batonEhs[eventType])
+              el.removeEventListener(eventType, el.batonEhcache[name])
               el.addEventListener(eventType, value)
-              el.batonEhs[eventType] = value
-              if (props["&" + name]) {
-                props["&" + name](el, name, value, el.batonEhs[eventType])
-              }
+              el.batonEhcache[name] = value
             }
           } else {
             // new handler
             el.addEventListener(eventType, value)
-            el.batonEhs[eventType] = value
-            if (props["&" + name]) {
-              props["&" + name](el, name, value, null)
-            }
+            el.batonEhcache[name] = value
           }
         }
         else if (name[0] == '@') {  // case: virtual property
@@ -83,68 +77,44 @@ export const baton = (state, show, baseEl = null) => {
           // we just ignore it
         }
         else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
-          const oldValue = el.getAttribute(name)
           value = "" + value
-          if (oldValue !== value) {
-            if (value === "") el.removeAttribute(name) 
-            else el.setAttribute(name, value)
-            if (props["&" + name]) {
-              props["&" + name](el, name, value, oldValue)
-            }
-          }
+          if (value === "") el.removeAttribute(name) 
+          else el.setAttribute(name, value)
         }
         else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
           const cname = name.slice(6)
-          const contained = el.classList.contains(cname)
-          if (value) {
-            el.classList.add(cname)
-            if (!contained && props["&" + name]) {
-              props["&" + name](el, name, true, false)
-            }
-          } else {
-            el.classList.remove(cname)
-            if (contained && props["&" + name]) {
-              props["&" + name](el, name, false, true)
-            }
-          }
+          if (value) el.classList.add(cname)
+          else el.classList.remove(cname)
         }
         else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
           const sname = name.slice(6)
-          const oldValue = el.style.getPropertyValue(sname)
           value = "" + value
-          if (oldValue !== value) {
-            if (value === "" || value === null) el.style.removeProperty(sname)
-            else el.style.setProperty(sname, value)
-            if (props["&" + name]) {
-              props["&" + name](el, name, value, oldValue)
-            }
-          }
+          if (value === "" || value === null) el.style.removeProperty(sname)
+          else el.style.setProperty(sname, value)
         }
         else {  // otherwise: common attributes
-          if (name in el &&
-              name !== "list" &&
-              name !== "type" &&
-              name !== "draggable" &&
-              name !== "spellcheck" &&
-              name !== "translate") {
+          if (name in el) {
             value = value == null ? "" : value
-            const oldValue = el[name]
-            if (oldValue !== value) {
-              el[name] = value
-              if (props["&" + name]) {
-                props["&" + name](el, name, value, oldValue)
-              }
-            }
+            el[name] = value
           } else {
-            const oldValue = el.getAttribute(name)
+            if (value != null && value !== false) el.setAttribute(name, value)
+            else el.removeAttribute(name)
+          }
+        }
+
+        // trigger update observer
+        const observerName = "&" + name
+        if (props[observerName]) {
+          if (! el.batonCache) {
+            el.batonCache = {}
+          }
+          if (name in el.batonCache) {
+            const oldValue = el.batonCache[name]
             if (oldValue !== value) {
-              if (value != null && value !== false) el.setAttribute(name, value)
-              else el.removeAttribute(name)
-              if (props["&" + name]) {
-                props["&" + name](el, name, value, oldValue)
-              }
+              props[observerName](el, name, value, oldValue)
             }
           }
+          el.batonCache[name] = value
         }
       }
     }
