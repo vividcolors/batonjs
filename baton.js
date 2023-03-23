@@ -76,6 +76,9 @@ export const baton = (state, show, baseEl = null) => {
         else if (name[0] == '&') {  // case: update handler
           // we just ignore it
         }
+        else if (name === 'childKeys') {  // case: childKeys special attribute
+          
+        }
         else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
           value = "" + value
           if (value === "") el.removeAttribute(name) 
@@ -214,4 +217,50 @@ export const debounce = (fn, interval) => {
       fn(...args)
     }, interval);
   }
+}
+
+export const diff = (newKeys, oldKeys) => {
+  let oldKeyed = {}
+  for (let i = 0; i < oldKeys.length; i++) {
+    oldKeyed[oldKeys[i]] = i
+  }
+
+  const events = []
+  let newKeyed = {}
+  let i = 0
+  let k = 0
+  while (k < newKeys.length) {
+    let oldKey = oldKeys[i]
+    let newKey = newKeys[k]
+    if (oldKey in newKeyed) {
+      i++
+      continue
+    }
+    if (newKey === oldKeys[i + 1]) {
+      i++
+      continue
+    }
+    let keyedIndex = (newKey in oldKeyed) ? oldKeyed[newKey] : null
+    if (oldKey === newKey) {
+      // match
+      i++
+    } else if (keyedIndex !== null) {
+      // move
+      const beforeKey = (k > 0) ? newKeys[k - 1] : null
+      events.push({type:'move', key:newKey, afterKey:beforeKey})
+    } else {
+      // insert
+      const beforeKey = (k > 0) ? newKeys[k - 1] : null
+      events.push({type:'insert', key:newKey, afterKey:beforeKey})
+    }
+    newKeyed[newKey] = k
+    k++
+  }
+  for (let oldKey in oldKeyed) {
+    if (!(oldKey in newKeyed)) {
+      events.push({type:'remove', key:oldKey})
+    }
+  }
+
+  return events
 }
