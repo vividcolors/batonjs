@@ -224,7 +224,7 @@ export const cssTransition = (baseClass, options = {}) => {
     const finish = (ev) => {
       if (ev && ev.target !== targetEl) return
       if (finished) return
-      fnished = true
+      finished = true
       el.classList.remove(`${baseClass}-${action}-active`)
       el.classList.remove(`${baseClass}-${action}`)
       targetEl.removeEventListener('transitionend', finish)
