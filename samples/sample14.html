@@ -89,15 +89,16 @@
         }
       }
       const bootstrapActions = {
-        openModal: (el, _name, newValue, oldValue) => {
+        openModal: (el, _name, newValue, oldValue, cleanup) => {
           const instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el, {backdrop:"static", keyboard:false})
           if (newValue) {  // open
             instance.show()
           } else {
             instance.hide()
+            if (cleanup) cleanup()
           }
         }, 
-        openToast: (container, _name, newValue, oldValue) => {
+        openToast: (container, _name, newValue, oldValue, cleanup) => {
           if (newValue) {
             const tpl = document.getElementById('toast-tpl')
             const toast = tpl.content.cloneNode(true).firstElementChild
@@ -110,6 +111,7 @@
               toast.remove()
             }, 10000)
           }
+          if (cleanup) cleanup()
         }
       }
       const state = {
