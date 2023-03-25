@@ -15,16 +15,21 @@ export const baton = (state, show, baseEl = null) => {
   const collectTasks = (decls, el, props) => {
     for (let name in decls) {
       const value = decls[name]
-      if ((value !== null && typeof value == "object") || 
+      if ((value !== null && !Array.isArray(value) && typeof value == "object") || 
           (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
         // element declaration
         const subEls = el.querySelectorAll(name)
-        for (let i = 0; i < subEls.length; i++) {
-          const subEl = subEls[i]
+        let i = 0
+        for (let subEl of subEls) {
+          if (subEl.batonUnmounted) {
+            console.log('collectTasks: ignored unmounted el', subEl)
+            continue
+          }
           const subDecls = (typeof value == "function") ? value(subEl, i) : value
           const subProps = {}
           tasks.push({el:subEl, props:subProps})
           collectTasks(subDecls, subEls[i], subProps)
+          i++
         }
       } else {
         // property declaration
@@ -34,8 +39,22 @@ export const baton = (state, show, baseEl = null) => {
   }
   
   const dispatchTasks = () => {
+    console.log("dispatchTasks", [...tasks])
+    const lifecycles = new Map()
     while (tasks.length) {
       const {el, props} = tasks.shift()
+      const lifecycle = lifecycles.get(el)
+      if (lifecycle === false) {
+        console.log('dispatchTasks.unmount', el)
+        el.batonUnmounted = true
+        if ("&mounted" in props) {
+          props["&mounted"](el, "mounted", false, true)
+        } else {
+          el.parentNode.removeChild(el)
+        }
+        lifecycles.delete(el)
+        break
+      }
       for (let name in props) {
         let value = props[name]
         if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
@@ -76,8 +95,38 @@ export const baton = (state, show, baseEl = null) => {
         else if (name[0] == '&') {  // case: update handler
           // we just ignore it
         }
-        else if (name === 'childKeys') {  // case: childKeys special attribute
-          
+        else if (name === 'children') {  // case: children special attribute
+          const [newKeys, template] = value
+          if ("batonChildren" in el) {
+            const oldKeys = el.batonChildren
+            for (let ev of diff(newKeys, oldKeys)) {
+              switch (ev.type) {
+                case 'insert': {
+                  console.log('insert', ev.key)
+                  const c = createElement(template, el)
+                  c.dataset.batonKey = ev.key
+                  const prev = ev.afterKey ? el.querySelector(`:scope > [data-baton-key='${ev.afterKey}']`) : null  // TODO: escape
+                  el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+                  lifecycles.set(c, true)
+                  break
+                }
+                case 'move': {
+                  console.log('move', ev.key)
+                  const c = el.querySelector(`:scope > [data-baton-key='${ev.key}']`)  // TODO: escape
+                  const prev = ev.afterKey ? el.querySelector(`:scope > [data-baton-key='${ev.afterKey}']`) : null  // TODO: escape
+                  el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+                  break
+                }
+                case 'remove': {
+                  console.log('remove', ev.key)
+                  const c = el.querySelector(`:scope > [data-baton-key='${ev.key}']`)  // TODO: escape
+                  lifecycles.set(c, false)
+                  break
+                }
+              }
+            }
+          }
+          el.batonChildren = newKeys
         }
         else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
           value = "" + value
@@ -120,7 +169,21 @@ export const baton = (state, show, baseEl = null) => {
           el.batonCache[name] = value
         }
       }
+      if (lifecycle === true) {
+        console.log('dispatchTasks.mount', el)
+        if ("&mounted" in props) {
+          props["&mounted"](el, "mounted", true, false)
+        }
+        lifecycles.delete(el)
+      }
     }
+
+    lifecycles.forEach((lifecycle, el) => {
+      console.log('dispatchTasks.clear', el, lifecycle)
+      if (! lifecycle) {
+        el.parentNode.removeChild(el)
+      }
+    })
   }
 
   const postfix = () => {
@@ -131,6 +194,7 @@ export const baton = (state, show, baseEl = null) => {
   }
 
   const reflect = () => {
+    console.log('reflect', state)
     const decls = show(state)
     const props = {}
     tasks.push({el:baseEl, props})
@@ -263,4 +327,12 @@ export const diff = (newKeys, oldKeys) => {
   }
 
   return events
+}
+
+const createElement = (template, parent) => {
+  if (template instanceof HTMLTemplateElement) {
+    return template.content.firstElementChild.cloneNode(true)
+  } else {
+    return template.cloneNode(true)
+  }
 }
