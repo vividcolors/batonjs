@@ -118,14 +118,17 @@ export const baton = (state, show, baseEl = null) => {
     }
     else if (name === 'children') {  // case: children special attribute
       const [newKeys, template] = value
-      if ("batonChildren" in el) {
+      if (! el.batonCache) {
+        el.batonCache = {}
+      }
+      if (el.batonCache.children) {
         const keyToEl = {}
         for (let c of el.childNodes) {
           if (c.dataset && c.dataset.batonKey) {
             keyToEl[c.dataset.batonKey] = c
           }
         }
-        const oldKeys = el.batonChildren
+        const oldKeys = el.batonCache.children
         for (let ev of diff(newKeys, oldKeys)) {
           switch (ev.type) {
             case 'insert': {
@@ -150,7 +153,7 @@ export const baton = (state, show, baseEl = null) => {
           }
         }
       }
-      el.batonChildren = newKeys
+      el.batonCache.children = newKeys
     }
     else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
       value = "" + value
