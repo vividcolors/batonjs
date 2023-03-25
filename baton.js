@@ -1,10 +1,11 @@
 
 
-
+const cssescape = CSS.escape
 
 export const baton = (state, show, baseEl = null) => {
-  const tasks = []  // update tasks for elements; {el, props}[]
   const posttasks = []  // posttask[]; posttask: () => void
+  const lifecycles = new Map()
+
   if ((state === null || typeof state === "undefined")) {
     throw new Error("`state' is out of range")
   }
@@ -12,178 +13,187 @@ export const baton = (state, show, baseEl = null) => {
     baseEl = document.documentElement
   }
 
-  const collectTasks = (decls, el, props) => {
-    for (let name in decls) {
-      const value = decls[name]
-      if ((value !== null && !Array.isArray(value) && typeof value == "object") || 
-          (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
-        // element declaration
-        const subEls = el.querySelectorAll(name)
-        let i = 0
-        for (let subEl of subEls) {
-          if (subEl.batonUnmounted) {
-            console.log('collectTasks: ignored unmounted el', subEl)
-            continue
-          }
-          const subDecls = (typeof value == "function") ? value(subEl, i) : value
-          const subProps = {}
-          tasks.push({el:subEl, props:subProps})
-          collectTasks(subDecls, subEls[i], subProps)
-          i++
-        }
-      } else {
-        // property declaration
-        props[name] = value
-      }
+  const declType = (name, value) => {
+    if (name[0] === '&') {
+      return "observer"
+    } else if ((value !== null && !Array.isArray(value) && typeof value == "object") || 
+               (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
+      return "element"
+    } else {
+      return "property"
     }
   }
-  
-  const dispatchTasks = () => {
-    console.log("dispatchTasks", [...tasks])
-    const lifecycles = new Map()
-    while (tasks.length) {
-      const {el, props} = tasks.shift()
-      const lifecycle = lifecycles.get(el)
-      if (lifecycle === false) {
-        console.log('dispatchTasks.unmount', el)
-        el.batonUnmounted = true
-        if ("&mounted" in props) {
-          props["&mounted"](el, "mounted", false, true)
-        } else {
-          el.parentNode.removeChild(el)
-        }
-        lifecycles.delete(el)
-        break
-      }
-      for (let name in props) {
-        let value = props[name]
-        if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
-          const eventType = name.slice(2)
-          if (! el.batonEhcache) {
-            el.batonEhcache = {}
-          }
-          if (el.batonEhcache[name]) {
-            if (el.batonEhcache[name] !== value) {
-              // handler changed
-              el.removeEventListener(eventType, el.batonEhcache[name])
-              el.addEventListener(eventType, value)
-              el.batonEhcache[name] = value
-            }
-          } else {
-            // new handler
-            el.addEventListener(eventType, value)
-            el.batonEhcache[name] = value
-          }
-        }
-        else if (name[0] == '@') {  // case: virtual property
-          const dataName = name.slice(1)
-          if (! el.batonVirtual) {
-            el.batonVirtual = {}
-          }
-          if (el.batonVirtual.hasOwnProperty(dataName)) {
-            const oldValue = el.batonVirtual[dataName]
-            if (value !== oldValue) {
-              posttasks.push(() => {
-                if (el.batonEhs && el.batonEhs[dataName]) {
-                  el.batonEhs[dataName](el, dataName, value, oldValue)
-                }
-              })
-            }
-          }
-          el.batonVirtual[dataName] = value
-        }
-        else if (name[0] == '&') {  // case: update handler
-          // we just ignore it
-        }
-        else if (name === 'children') {  // case: children special attribute
-          const [newKeys, template] = value
-          if ("batonChildren" in el) {
-            const oldKeys = el.batonChildren
-            for (let ev of diff(newKeys, oldKeys)) {
-              switch (ev.type) {
-                case 'insert': {
-                  console.log('insert', ev.key)
-                  const c = createElement(template, el)
-                  c.dataset.batonKey = ev.key
-                  const prev = ev.afterKey ? el.querySelector(`:scope > [data-baton-key='${ev.afterKey}']`) : null  // TODO: escape
-                  el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
-                  lifecycles.set(c, true)
-                  break
-                }
-                case 'move': {
-                  console.log('move', ev.key)
-                  const c = el.querySelector(`:scope > [data-baton-key='${ev.key}']`)  // TODO: escape
-                  const prev = ev.afterKey ? el.querySelector(`:scope > [data-baton-key='${ev.afterKey}']`) : null  // TODO: escape
-                  el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
-                  break
-                }
-                case 'remove': {
-                  console.log('remove', ev.key)
-                  const c = el.querySelector(`:scope > [data-baton-key='${ev.key}']`)  // TODO: escape
-                  lifecycles.set(c, false)
-                  break
-                }
-              }
-            }
-          }
-          el.batonChildren = newKeys
-        }
-        else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
-          value = "" + value
-          if (value === "") el.removeAttribute(name) 
-          else el.setAttribute(name, value)
-        }
-        else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
-          const cname = name.slice(6)
-          if (value) el.classList.add(cname)
-          else el.classList.remove(cname)
-        }
-        else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
-          const sname = name.slice(6)
-          value = "" + value
-          if (value === "" || value === null) el.style.removeProperty(sname)
-          else el.style.setProperty(sname, value)
-        }
-        else {  // otherwise: common attributes
-          if (name in el) {
-            value = value == null ? "" : value
-            el[name] = value
-          } else {
-            if (value != null && value !== false) el.setAttribute(name, value)
-            else el.removeAttribute(name)
-          }
-        }
 
-        // trigger update observer
+  const dispatchElement = (decls, el) => {
+    const callbacks = []
+    const lifecycle = lifecycles.get(el)
+    for (let name in decls) {
+      let value = decls[name]
+      if (declType(name, value) === "property") {
+        value = dispatchProperty(name, value, el)
+        // register update observer
         const observerName = "&" + name
-        if (props[observerName]) {
+        if (decls[observerName]) {
           if (! el.batonCache) {
             el.batonCache = {}
           }
           if (name in el.batonCache) {
             const oldValue = el.batonCache[name]
             if (oldValue !== value) {
-              props[observerName](el, name, value, oldValue)
+              callbacks.push([decls[observerName], el, name, value, oldValue])
             }
           }
           el.batonCache[name] = value
         }
       }
+    }
+    for (let callback of callbacks) {
+      const f = callback.shift()
+      f(...callback)
+    }
+    if ("&mounted" in decls) {
+      el.batonLifecycle = decls["&mounted"]
       if (lifecycle === true) {
-        console.log('dispatchTasks.mount', el)
-        if ("&mounted" in props) {
-          props["&mounted"](el, "mounted", true, false)
-        }
+        el.batonLifecycle(el, "mounted", true, false)
         lifecycles.delete(el)
       }
     }
+    for (let name in decls) {
+      const value = decls[name]
+      if (declType(name, value) === "element") {
+        const subEls = el.querySelectorAll(name)
+        let i = 0
+        for (let subEl of subEls) {
+          if (subEl.batonUnmounted) {
+            continue
+          } else if (lifecycles.get(subEl) === false) {
+            subEl.batonUnmounted = true
+            if (subEl.batonLifecycle) {
+              subEl.batonLifecycle(subEl, "mounted", false, true)
+            } else {
+              subEl.parentNode.removeChild(subEl)
+            }
+            lifecycles.delete(subEl)
+            continue
+          }
+          const subDecls = (typeof value == "function") ? value(subEl, i) : value
+          dispatchElement(subDecls, subEl)
+          i++
+        }
+      }
+    }
+  }
 
+  const dispatchProperty = (name, value, el) => {
+    if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
+      const eventType = name.slice(2)
+      if (! el.batonEhcache) {
+        el.batonEhcache = {}
+      }
+      if (el.batonEhcache[name]) {
+        if (el.batonEhcache[name] !== value) {
+          // handler changed
+          el.removeEventListener(eventType, el.batonEhcache[name])
+          el.addEventListener(eventType, value)
+          el.batonEhcache[name] = value
+        }
+      } else {
+        // new handler
+        el.addEventListener(eventType, value)
+        el.batonEhcache[name] = value
+      }
+    }
+    else if (name[0] == '@') {  // case: virtual property
+      const dataName = name.slice(1)
+      if (! el.batonVirtual) {
+        el.batonVirtual = {}
+      }
+      if (el.batonVirtual.hasOwnProperty(dataName)) {
+        const oldValue = el.batonVirtual[dataName]
+        if (value !== oldValue) {
+          posttasks.push(() => {
+            if (el.batonEhs && el.batonEhs[dataName]) {
+              el.batonEhs[dataName](el, dataName, value, oldValue)
+            }
+          })
+        }
+      }
+      el.batonVirtual[dataName] = value
+    }
+    else if (name[0] == '&') {  // case: update handler
+      // we just ignore it
+    }
+    else if (name === 'children') {  // case: children special attribute
+      const [newKeys, template] = value
+      if ("batonChildren" in el) {
+        const keyToEl = {}
+        for (let c of el.childNodes) {
+          if (c.dataset && c.dataset.batonKey) {
+            keyToEl[c.dataset.batonKey] = c
+          }
+        }
+        const oldKeys = el.batonChildren
+        for (let ev of diff(newKeys, oldKeys)) {
+          switch (ev.type) {
+            case 'insert': {
+              const c = createElement(template, el)
+              c.dataset.batonKey = ev.key
+              const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
+              el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+              lifecycles.set(c, true)
+              break
+            }
+            case 'move': {
+              const c = keyToEl[ev.key]
+              const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
+              el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+              break
+            }
+            case 'remove': {
+              const c = keyToEl[ev.key]
+              lifecycles.set(c, false)
+              break
+            }
+          }
+        }
+      }
+      el.batonChildren = newKeys
+    }
+    else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
+      value = "" + value
+      if (value === "") el.removeAttribute(name) 
+      else el.setAttribute(name, value)
+    }
+    else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
+      const cname = name.slice(6)
+      if (value) el.classList.add(cname)
+      else el.classList.remove(cname)
+    }
+    else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
+      const sname = name.slice(6)
+      value = "" + value
+      if (value === "" || value === null) el.style.removeProperty(sname)
+      else el.style.setProperty(sname, value)
+    }
+    else {  // otherwise: common attributes
+      if (name in el) {
+        value = value == null ? "" : value
+        el[name] = value
+      } else {
+        if (value != null && value !== false) el.setAttribute(name, value)
+        else el.removeAttribute(name)
+      }
+    }
+    return value
+  }
+
+  const dispatchLifecycles = () => {
     lifecycles.forEach((lifecycle, el) => {
-      console.log('dispatchTasks.clear', el, lifecycle)
       if (! lifecycle) {
         el.parentNode.removeChild(el)
       }
     })
+    lifecycles.clear()
   }
 
   const postfix = () => {
@@ -194,12 +204,9 @@ export const baton = (state, show, baseEl = null) => {
   }
 
   const reflect = () => {
-    console.log('reflect', state)
     const decls = show(state)
-    const props = {}
-    tasks.push({el:baseEl, props})
-    collectTasks(decls, baseEl, props)
-    dispatchTasks()
+    dispatchElement(decls, baseEl)
+    dispatchLifecycles()
     postfix()
   }
 

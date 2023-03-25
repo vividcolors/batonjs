@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Insert/Remove child</title>
+  </head>
+  <body>
+    <ul>
+      <li data-baton-key="1"><span>1</span><button type="button" class="removeButton">Remove</button></li>
+    </ul>
+    <button type="button" class="appendButton">Append New</button>
+    <template id="template">
+      <li><span></span><button type="button" class="removeButton">Remove</button></li>
+    </template>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const template = document.getElementById("template")
+      const state = {items:["1"]}
+      const onremove = (ev) => {
+        const index = ev.target.dataset.index
+        withState(state => {
+          const items = [...state.items]
+          items.splice(index, 1)
+          return {...state, items}
+        })
+      }
+      const onappend = (ev) => {
+        withState(state => {
+          const items = [...state.items]
+          items.push("" + Date.now())
+          return {...state, items}
+        })
+      }
+      const show = (state) => ({
+        ul: {
+          children: [state.items, template], 
+          li: (el, i) => ({
+            "span": {
+              innerText: state.items[i]
+            }, 
+            ".removeButton": {
+              "data-index": i, 
+              onclick: onremove
+            }
+          })
+        }, 
+        ".appendButton": {
+          onclick: onappend
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

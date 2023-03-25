@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Insert/Remove child with CSS Transition</title>
+  </head>
+  <body>
+    <style>
+      li.transition-enter {
+        transition: opacity 0.2s linear;
+        opacity: 0;
+      }
+      li.transition-enter-active {
+        opacity: 1;
+      }
+      li.transition-exit {
+        transition: opacity 0.2s linear;
+        opacity: 1;
+      }
+      li.transition-exit-active {
+        opacity: 0;
+      }
+    </style>
+    <ul>
+      <li data-baton-key="1"><span>1</span><button type="button" class="removeButton">Remove</button></li>
+    </ul>
+    <button type="button" class="appendButton">Append New</button>
+    <template id="template">
+      <li><span></span><button type="button" class="removeButton">Remove</button></li>
+    </template>
+    <script type="module">
+      import {baton, cssTransition} from '../baton.js'
+      const template = document.getElementById("template")
+      const fade = cssTransition('transition', {
+        onfinish: (el, _name, value, oldValue) => {
+          if (! value) {
+            el.parentNode.removeChild(el)
+          }
+        }
+      })
+      const state = {items:["1"]}
+      const onremove = (ev) => {
+        const index = ev.target.dataset.index
+        withState(state => {
+          const items = [...state.items]
+          items.splice(index, 1)
+          return {...state, items}
+        })
+      }
+      const onappend = (ev) => {
+        withState(state => {
+          const items = [...state.items]
+          items.push("" + Date.now())
+          return {...state, items}
+        })
+      }
+      const show = (state) => ({
+        ul: {
+          children: [state.items, template], 
+          li: (el, i) => ({
+            "&mounted": fade, 
+            "span": {
+              innerText: state.items[i]
+            }, 
+            ".removeButton": {
+              "data-index": i, 
+              onclick: onremove
+            }
+          })
+        }, 
+        ".appendButton": {
+          onclick: onappend
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
