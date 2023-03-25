@@ -1,7 +1,5 @@
 
 
-const cssescape = CSS.escape
-
 export const baton = (state, show, baseEl = null) => {
   const posttasks = []  // posttask[]; posttask: () => void
   const lifecycles = new Map()
@@ -26,12 +24,13 @@ export const baton = (state, show, baseEl = null) => {
 
   const dispatchElement = (decls, el) => {
     const callbacks = []
-    const lifecycle = lifecycles.get(el)
+    
+    // sync properties from declaration to element.
     for (let name in decls) {
       let value = decls[name]
       if (declType(name, value) === "property") {
         value = dispatchProperty(name, value, el)
-        // register update observer
+        // handles update observer
         const observerName = "&" + name
         if (decls[observerName]) {
           if (! el.batonCache) {
@@ -47,17 +46,24 @@ export const baton = (state, show, baseEl = null) => {
         }
       }
     }
+    // call update observers
     for (let callback of callbacks) {
       const f = callback.shift()
       f(...callback)
     }
+    // handles `mounted' callback
     if ("&mounted" in decls) {
+      // If the declaration is a function, the declaration cannot be referenced 
+      // because the corresponding element does not exist when unmounted.
+      // Therefore, `mounted' callback should be stored in the element so that 
+      // it can be referenced even when there is no declaration.
       el.batonLifecycle = decls["&mounted"]
-      if (lifecycle === true) {
+      if (lifecycles.get(el) === true) {
         el.batonLifecycle(el, "mounted", true, false)
         lifecycles.delete(el)
       }
     }
+    // dispatch sub declarations
     for (let name in decls) {
       const value = decls[name]
       if (declType(name, value) === "element") {
@@ -65,8 +71,10 @@ export const baton = (state, show, baseEl = null) => {
         let i = 0
         for (let subEl of subEls) {
           if (subEl.batonUnmounted) {
+            // subEl has been already unmounted. Just ignore.
             continue
           } else if (lifecycles.get(subEl) === false) {
+            // subEl is just being unmounted. Unmount now.
             subEl.batonUnmounted = true
             if (subEl.batonLifecycle) {
               subEl.batonLifecycle(subEl, "mounted", false, true)
@@ -187,15 +195,6 @@ export const baton = (state, show, baseEl = null) => {
     return value
   }
 
-  const dispatchLifecycles = () => {
-    lifecycles.forEach((lifecycle, el) => {
-      if (! lifecycle) {
-        el.parentNode.removeChild(el)
-      }
-    })
-    lifecycles.clear()
-  }
-
   const postfix = () => {
     while (posttasks.length) {
       const callback = posttasks.shift()
@@ -206,7 +205,15 @@ export const baton = (state, show, baseEl = null) => {
   const reflect = () => {
     const decls = show(state)
     dispatchElement(decls, baseEl)
-    dispatchLifecycles()
+    
+    // There may be elements without declarations. We process them here.
+    lifecycles.forEach((lifecycle, el) => {
+      if (! lifecycle) {
+        el.parentNode.removeChild(el)
+      }
+    })
+    lifecycles.clear()
+
     postfix()
   }
 
