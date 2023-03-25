@@ -43,6 +43,13 @@ export const baton = (state, show, baseEl = null) => {
           }
           el.batonCache[name] = value
         }
+        // Always store event handlers
+        if (name[0] === 'o' && name[1] === 'n') {
+          if (! el.batonCache) {
+            el.batonCache = {}
+          }
+          el.batonCache[name] = value
+        }
       }
     }
     // call update observers
@@ -97,20 +104,15 @@ export const baton = (state, show, baseEl = null) => {
   const dispatchProperty = (name, value, el) => {
     if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
       const eventType = name.slice(2)
-      if (! el.batonEhcache) {
-        el.batonEhcache = {}
-      }
-      if (el.batonEhcache[name]) {
-        if (el.batonEhcache[name] !== value) {
+      if (el.batonCache && el.batonCache[name]) {
+        if (el.batonCache[name] !== value) {
           // handler changed
           el.removeEventListener(eventType, el.batonEhcache[name])
           el.addEventListener(eventType, value)
-          el.batonEhcache[name] = value
         }
       } else {
         // new handler
         el.addEventListener(eventType, value)
-        el.batonEhcache[name] = value
       }
     }
     else if (name[0] == '&') {  // case: update handler
