@@ -1,7 +1,6 @@
 
 
 export const baton = (state, show, baseEl = null) => {
-  const posttasks = []  // posttask[]; posttask: () => void
   const lifecycles = new Map()
 
   if ((state === null || typeof state === "undefined")) {
@@ -111,23 +110,6 @@ export const baton = (state, show, baseEl = null) => {
         el.batonEhcache[name] = value
       }
     }
-    else if (name[0] == '@') {  // case: virtual property
-      const dataName = name.slice(1)
-      if (! el.batonVirtual) {
-        el.batonVirtual = {}
-      }
-      if (el.batonVirtual.hasOwnProperty(dataName)) {
-        const oldValue = el.batonVirtual[dataName]
-        if (value !== oldValue) {
-          posttasks.push(() => {
-            if (el.batonEhs && el.batonEhs[dataName]) {
-              el.batonEhs[dataName](el, dataName, value, oldValue)
-            }
-          })
-        }
-      }
-      el.batonVirtual[dataName] = value
-    }
     else if (name[0] == '&') {  // case: update handler
       // we just ignore it
     }
@@ -195,13 +177,6 @@ export const baton = (state, show, baseEl = null) => {
     return value
   }
 
-  const postfix = () => {
-    while (posttasks.length) {
-      const callback = posttasks.shift()
-      callback()
-    }
-  }
-
   const reflect = () => {
     const decls = show(state)
     dispatchElement(decls, baseEl)
@@ -213,8 +188,6 @@ export const baton = (state, show, baseEl = null) => {
       }
     })
     lifecycles.clear()
-
-    postfix()
   }
 
   const withState = (update) => {
