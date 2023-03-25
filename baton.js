@@ -38,7 +38,7 @@ export const baton = (state, show, baseEl = null) => {
           if (name in el.batonCache) {
             const oldValue = el.batonCache[name]
             if (oldValue !== value) {
-              callbacks.push([decls[observerName], el, name, value, oldValue])
+              callbacks.push([decls[observerName], el, name, value, oldValue, null])
             }
           }
           el.batonCache[name] = value
@@ -58,7 +58,7 @@ export const baton = (state, show, baseEl = null) => {
       // it can be referenced even when there is no declaration.
       el.batonLifecycle = decls["&mounted"]
       if (lifecycles.get(el) === true) {
-        el.batonLifecycle(el, "mounted", true, false)
+        el.batonLifecycle(el, "mounted", true, false, null)
         lifecycles.delete(el)
       }
     }
@@ -75,10 +75,13 @@ export const baton = (state, show, baseEl = null) => {
           } else if (lifecycles.get(subEl) === false) {
             // subEl is just being unmounted. Unmount now.
             subEl.batonUnmounted = true
-            if (subEl.batonLifecycle) {
-              subEl.batonLifecycle(subEl, "mounted", false, true)
-            } else {
+            const cleanup = () => {
               subEl.parentNode.removeChild(subEl)
+            }
+            if (subEl.batonLifecycle) {
+              subEl.batonLifecycle(subEl, "mounted", false, true, cleanup)
+            } else {
+              cleanup()
             }
             lifecycles.delete(subEl)
             continue
@@ -210,27 +213,28 @@ export const baton = (state, show, baseEl = null) => {
  * options.timeout: number
  */
 export const cssTransition = (baseClass, options = {}) => {
-  return (el, name, value, oldValue) => {
+  return (el, name, value, oldValue, cleanup) => {
     const targetEl = (options.target) ? el.querySelector(options.target) : el
     const action = (value) ? 'enter' : 'exit'
     el.classList.add(`${baseClass}-${action}-before`)
     if (options.onstart) options.onstart(el, name, value, oldValue)
     el.classList.remove(`${baseClass}-${action}-before`)
     el.classList.add(`${baseClass}-${action}`)
-    let cleaned = false
-    const cleanup = (ev) => {
+    let finished = false
+    const finish = (ev) => {
       if (ev && ev.target !== targetEl) return
-      if (cleaned) return
-      cleaned = true
+      if (finished) return
+      fnished = true
       el.classList.remove(`${baseClass}-${action}-active`)
       el.classList.remove(`${baseClass}-${action}`)
-      targetEl.removeEventListener('transitionend', cleanup)
+      targetEl.removeEventListener('transitionend', finish)
       if (options.onfinish) options.onfinish(el, name, value, oldValue)
+      if (cleanup) cleanup()
     }
     window.setTimeout(() => {
       el.classList.add(`${baseClass}-${action}-active`)
-      targetEl.addEventListener('transitionend', cleanup)
-      window.setTimeout(cleanup, options.timeout || 10000)
+      targetEl.addEventListener('transitionend', finish)
+      window.setTimeout(finish, options.timeout || 10000)
     }, 100)
   }
 }
