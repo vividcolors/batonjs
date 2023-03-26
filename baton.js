@@ -211,6 +211,92 @@ export const baton = (state, show, baseEl = null) => {
   return withState
 }
 
+const presetToOptions = (preset) => {
+  switch (preset) {
+    case 'width': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          el.style.setProperty("--width", el.scrollWidth + "px")
+        }
+      }
+    }
+    case 'height': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          el.style.setProperty("--height", el.scrollHeight + "px")
+        }
+      }
+    }
+    case 'details': {
+      return {
+        target: ':scope > *:nth-child(2)', 
+        onstart: (el, name, newValue, oldValue) => {
+          const p = el.querySelector(':scope > *:nth-child(2)')
+          if (! newValue) {
+            el.open = true
+          }
+          p.style.setProperty("--height", p.scrollHeight + "px")
+        }, 
+        onfinish: (el, name, newValue, oldValue) => {
+          if (! newValue) {
+            el.open = false
+          }
+        }
+      }
+    }
+    case 'size': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          el.style.setProperty("--width", el.scrollWidth + "px")
+          el.style.setProperty("--height", el.scrollHeight + "px")
+        }
+      }
+    }
+    case 'popup': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          const rect = el.getBoundingClientRect()
+          el.style.setProperty("--width", rect.width + "px")
+          el.style.setProperty('--height', rect.height + 'px')
+          if (newValue) {
+            const callerEl = document.getElementById(newValue)
+            const callerRect = callerEl.getBoundingClientRect()
+            const ww = document.documentElement.clientWidth  // TODO: is this correct?
+            const wh = window.innerHeight  // TODO: is this correct?
+            let left, right, top, bottom
+            if (callerRect.left + rect.width <= ww) {
+              left = callerRect.left + "px"
+              right = "auto"
+            } else if (callerRect.right - rect.width >= 0) {
+              left = "auto"
+              right = (ww - callerRect.right) + "px"
+            } else {
+              left = ((ww - rect.width) * 0.5) + "px"
+              right = "auto"
+            }
+            if (callerRect.bottom + rect.height <= wh) {
+              top = callerRect.bottom + "px"
+              bottom = "auto"
+            } else if (callerRect.bottom - rect.height >= 0) {
+              top = "auto"
+              bottom = (wh - callerRect.top) + "px"
+            } else {
+              top = ((wh - rect.height) * 0.5) + "px"
+              bottom = "auto"
+            }
+            el.style.setProperty('--left', left)
+            el.style.setProperty('--right', right)
+            el.style.setProperty('--top', top)
+            el.style.setProperty('--bottom', bottom)
+          }
+        }
+      }
+    }
+    default: 
+      throw new Error(`unknown preset "${preset}"`)
+  }
+}
+
 /**
  * options.target: css-selector
  * options.onstart: callback
@@ -218,6 +304,9 @@ export const baton = (state, show, baseEl = null) => {
  * options.timeout: number
  */
 export const cssTransition = (baseClass, options = {}) => {
+  if (typeof options === "string") {
+    options = presetToOptions(options)
+  }
   return (el, name, value, oldValue, cleanup) => {
     const targetEl = (options.target) ? el.querySelector(options.target) : el
     const action = (value) ? 'enter' : 'exit'

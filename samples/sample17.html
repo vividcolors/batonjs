@@ -17,31 +17,37 @@
       .dropdown[data-caller-id], .dropdown.transition-exit-before {
         display: block;
         left: var(--left, -10000px);
+        right: var(--right, auto);
         top: var(--top, -10000px);
         bottom: var(--bottom, auto);
       }
       .dropdown.transition-enter {
-        transition: height 0.2s linear;
+        transition: height 0.2s linear, width 0.2s ease-in;
         display: block;
         height: 0;
+        width: 0;
       }
       .dropdown.transition-enter-active {
         height: var(--height);
+        width: var(--width);
       }
       .dropdown.transition-exit {
-        transition: height 0.2s linear;
+        transition: height 0.2s linear, width 0.2s ease-in;
         display: block;
         height: var(--height);
+        width: var(--width);
         left: var(--left, -10000px);
+        right: var(--right, -10000px);
         top: var(--top, -10000px);
         bottom: var(--bottom, auto);
       }
       .dropdown.transition-exit-active {
         height: 0;
+        width: 0;
       }
     </style>
     <button type="button" class="button" id="openButton" data-target="myDropdown">Open Dropdown</button>
-    <p style="padding-top:80vh; padding-left:80vw;">
+    <p style="padding-top:80vh; padding-left:calc(100% - 80px);">
       ...
       <button type="button" class="button" id="openButton2" data-target="myDropdown">Open Dropdown</button>
     </p>
@@ -57,33 +63,7 @@
     </div>
     <script type="module">
       import {baton, cssTransition} from '../baton.js'
-      const computeDropdownPosition = (callerEl, dropdownSize) => {
-        const callerRect = callerEl.getBoundingClientRect()
-        const left = (callerRect.left + dropdownSize.width <= window.innerWidth) ? callerRect.left  // aligns with button left
-                   : (callerRect.right - dropdownSize.width >= 0) ? (callerRect.right - dropdownSize.width)  // aligns with button right
-                   : (window.innerWidth - dropdownSize.width) * 0.5  // aligns with window center
-        const [top, bottom] = (callerRect.bottom + dropdownSize.height <= window.innerHeight) ? [callerRect.bottom, "auto"]  // below of button
-                  : (callerRect.top - dropdownSize.height >= 0) ? ["auto", window.innerHeight - callerRect.top]  // above of button
-                  : [0, "auto"]  // top of window
-        return {
-          left: left + 'px', 
-          top: top != "auto" ? top + 'px' : top, 
-          bottom: bottom != "auto" ? bottom + 'px' : bottom
-        } 
-      }
-      const dropdownTransition = cssTransition("transition", {
-        onstart: (el, name, value, oldValue) => {
-          const rect = el.getBoundingClientRect()
-          el.style.setProperty('--height', rect.height + 'px')
-          if (value) {
-            const callerEl = document.getElementById(value)
-            const {left, top, bottom} = computeDropdownPosition(callerEl, rect)
-            el.style.setProperty('--left', left)
-            el.style.setProperty('--top', top)
-            el.style.setProperty('--bottom', bottom)
-          }
-        }
-      })
+      const myTransition = cssTransition("transition", "popup")
       const state = {activeDropdownId: null, activeCallerId: null}
       const ontoggle = (ev) => {
         withState(state => {
@@ -126,7 +106,7 @@
           }, 
           ".dropdown": (el) => ({
             "data-caller-id": state.activeDropdownId === el.id ? state.activeCallerId : "", 
-            "&data-caller-id": dropdownTransition
+            "&data-caller-id": myTransition
           })
         }
       }
