@@ -39,22 +39,7 @@
     </style>
     <script type="module">
       import {baton, cssTransition} from '../baton.js'
-      const onopenOptions = {
-        target: 'p', 
-        onstart: (el, name, newValue, oldValue) => {
-          const p = el.querySelector('p')
-          if (newValue) {
-            el.open = true
-          }
-          p.style.setProperty("--height", p.scrollHeight + "px")
-        }, 
-        onfinish: (el, name, newValue, oldValue) => {
-          if (! newValue) {
-            el.open = false
-          }
-        }
-      }
-      const onopen = cssTransition('transition', onopenOptions)
+      const onopen = cssTransition('transition', 'details')
       const state = {openPart:null}
       const switchPart = (ev) => {
         ev.preventDefault()
@@ -62,8 +47,8 @@
       }
       const show = (state) => ({
         details: (el) => ({
-          "class-is-open": el.dataset.name == state.openPart, 
-          "&class-is-open": onopen, 
+          open: el.dataset.name == state.openPart, 
+          "&open": onopen, 
           'summary': {
             "onclick": switchPart
           }

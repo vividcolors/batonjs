@@ -1,10 +1,8 @@
 
 
-
-
 export const baton = (state, show, baseEl = null) => {
-  const tasks = []  // update tasks for elements; {el, props}[]
-  const posttasks = []  // posttask[]; posttask: () => void
+  const lifecycles = new Map()
+
   if ((state === null || typeof state === "undefined")) {
     throw new Error("`state' is out of range")
   }
@@ -12,128 +10,192 @@ export const baton = (state, show, baseEl = null) => {
     baseEl = document.documentElement
   }
 
-  const collectTasks = (decls, el, props) => {
-    for (let name in decls) {
-      const value = decls[name]
-      if ((value !== null && typeof value == "object") || 
-          (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
-        // element declaration
-        const subEls = el.querySelectorAll(name)
-        for (let i = 0; i < subEls.length; i++) {
-          const subEl = subEls[i]
-          const subDecls = (typeof value == "function") ? value(subEl, i) : value
-          const subProps = {}
-          tasks.push({el:subEl, props:subProps})
-          collectTasks(subDecls, subEls[i], subProps)
-        }
-      } else {
-        // property declaration
-        props[name] = value
-      }
+  const declType = (name, value) => {
+    if (name[0] === '&') {
+      return "observer"
+    } else if ((value !== null && !Array.isArray(value) && typeof value == "object") || 
+               (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
+      return "element"
+    } else {
+      return "property"
     }
   }
-  
-  const dispatchTasks = () => {
-    while (tasks.length) {
-      const {el, props} = tasks.shift()
-      for (let name in props) {
-        let value = props[name]
-        if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
-          const eventType = name.slice(2)
-          if (! el.batonEhcache) {
-            el.batonEhcache = {}
-          }
-          if (el.batonEhcache[name]) {
-            if (el.batonEhcache[name] !== value) {
-              // handler changed
-              el.removeEventListener(eventType, el.batonEhcache[name])
-              el.addEventListener(eventType, value)
-              el.batonEhcache[name] = value
-            }
-          } else {
-            // new handler
-            el.addEventListener(eventType, value)
-            el.batonEhcache[name] = value
-          }
-        }
-        else if (name[0] == '@') {  // case: virtual property
-          const dataName = name.slice(1)
-          if (! el.batonVirtual) {
-            el.batonVirtual = {}
-          }
-          if (el.batonVirtual.hasOwnProperty(dataName)) {
-            const oldValue = el.batonVirtual[dataName]
-            if (value !== oldValue) {
-              posttasks.push(() => {
-                if (el.batonEhs && el.batonEhs[dataName]) {
-                  el.batonEhs[dataName](el, dataName, value, oldValue)
-                }
-              })
-            }
-          }
-          el.batonVirtual[dataName] = value
-        }
-        else if (name[0] == '&') {  // case: update handler
-          // we just ignore it
-        }
-        else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
-          value = "" + value
-          if (value === "") el.removeAttribute(name) 
-          else el.setAttribute(name, value)
-        }
-        else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
-          const cname = name.slice(6)
-          if (value) el.classList.add(cname)
-          else el.classList.remove(cname)
-        }
-        else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
-          const sname = name.slice(6)
-          value = "" + value
-          if (value === "" || value === null) el.style.removeProperty(sname)
-          else el.style.setProperty(sname, value)
-        }
-        else {  // otherwise: common attributes
-          if (name in el) {
-            value = value == null ? "" : value
-            el[name] = value
-          } else {
-            if (value != null && value !== false) el.setAttribute(name, value)
-            else el.removeAttribute(name)
-          }
-        }
 
-        // trigger update observer
+  const dispatchElement = (decls, el) => {
+    const callbacks = []
+    
+    // sync properties from declaration to element.
+    for (let name in decls) {
+      let value = decls[name]
+      if (declType(name, value) === "property") {
+        value = dispatchProperty(name, value, el)
+        // handles update observer
         const observerName = "&" + name
-        if (props[observerName]) {
+        if (decls[observerName]) {
           if (! el.batonCache) {
             el.batonCache = {}
           }
           if (name in el.batonCache) {
             const oldValue = el.batonCache[name]
             if (oldValue !== value) {
-              props[observerName](el, name, value, oldValue)
+              callbacks.push([decls[observerName], el, name, value, oldValue, null])
             }
+          }
+          el.batonCache[name] = value
+        }
+        // Always store event handlers
+        if (name[0] === 'o' && name[1] === 'n') {
+          if (! el.batonCache) {
+            el.batonCache = {}
           }
           el.batonCache[name] = value
         }
       }
     }
+    // call update observers
+    for (let callback of callbacks) {
+      const f = callback.shift()
+      f(...callback)
+    }
+    // handles `mounted' callback
+    if ("&mounted" in decls) {
+      // If the declaration is a function, the declaration cannot be referenced 
+      // because the corresponding element does not exist when unmounted.
+      // Therefore, `mounted' callback should be stored in the element so that 
+      // it can be referenced even when there is no declaration.
+      el.batonLifecycle = decls["&mounted"]
+      if (lifecycles.get(el) === true) {
+        el.batonLifecycle(el, "mounted", true, false, null)
+        lifecycles.delete(el)
+      }
+    }
+    // dispatch sub declarations
+    for (let name in decls) {
+      const value = decls[name]
+      if (declType(name, value) === "element") {
+        const subEls = el.querySelectorAll(name)
+        let i = 0
+        for (let subEl of subEls) {
+          if (subEl.batonUnmounted) {
+            // subEl has been already unmounted. Just ignore.
+            continue
+          } else if (lifecycles.get(subEl) === false) {
+            // subEl is just being unmounted. Unmount now.
+            subEl.batonUnmounted = true
+            const cleanup = () => {
+              subEl.parentNode.removeChild(subEl)
+            }
+            if (subEl.batonLifecycle) {
+              subEl.batonLifecycle(subEl, "mounted", false, true, cleanup)
+            } else {
+              cleanup()
+            }
+            lifecycles.delete(subEl)
+            continue
+          }
+          const subDecls = (typeof value == "function") ? value(subEl, i) : value
+          dispatchElement(subDecls, subEl)
+          i++
+        }
+      }
+    }
   }
 
-  const postfix = () => {
-    while (posttasks.length) {
-      const callback = posttasks.shift()
-      callback()
+  const dispatchProperty = (name, value, el) => {
+    if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
+      const eventType = name.slice(2)
+      if (el.batonCache && el.batonCache[name]) {
+        if (el.batonCache[name] !== value) {
+          // handler changed
+          el.removeEventListener(eventType, el.batonEhcache[name])
+          el.addEventListener(eventType, value)
+        }
+      } else {
+        // new handler
+        el.addEventListener(eventType, value)
+      }
     }
+    else if (name[0] == '&') {  // case: update handler
+      // we just ignore it
+    }
+    else if (name === 'children') {  // case: children special attribute
+      const [newKeys, template] = value
+      if (! el.batonCache) {
+        el.batonCache = {}
+      }
+      if (el.batonCache.children) {
+        const keyToEl = {}
+        for (let c of el.childNodes) {
+          if (c.dataset && c.dataset.batonKey) {
+            keyToEl[c.dataset.batonKey] = c
+          }
+        }
+        const oldKeys = el.batonCache.children
+        for (let ev of diff(newKeys, oldKeys)) {
+          switch (ev.type) {
+            case 'insert': {
+              const c = createElement(template, el)
+              c.dataset.batonKey = ev.key
+              const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
+              el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+              lifecycles.set(c, true)
+              break
+            }
+            case 'move': {
+              const c = keyToEl[ev.key]
+              const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
+              el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+              break
+            }
+            case 'remove': {
+              const c = keyToEl[ev.key]
+              lifecycles.set(c, false)
+              break
+            }
+          }
+        }
+      }
+      el.batonCache.children = newKeys
+    }
+    else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
+      value = "" + value
+      if (value === "") el.removeAttribute(name) 
+      else el.setAttribute(name, value)
+    }
+    else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
+      const cname = name.slice(6)
+      if (value) el.classList.add(cname)
+      else el.classList.remove(cname)
+    }
+    else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
+      const sname = name.slice(6)
+      value = "" + value
+      if (value === "" || value === null) el.style.removeProperty(sname)
+      else el.style.setProperty(sname, value)
+    }
+    else {  // otherwise: common attributes
+      if (name in el) {
+        value = value == null ? "" : value
+        el[name] = value
+      } else {
+        if (value != null && value !== false) el.setAttribute(name, value)
+        else el.removeAttribute(name)
+      }
+    }
+    return value
   }
 
   const reflect = () => {
     const decls = show(state)
-    const props = {}
-    tasks.push({el:baseEl, props})
-    collectTasks(decls, baseEl, props)
-    dispatchTasks()
-    postfix()
+    dispatchElement(decls, baseEl)
+    
+    // There may be elements without declarations. We process them here.
+    lifecycles.forEach((lifecycle, el) => {
+      if (! lifecycle) {
+        el.parentNode.removeChild(el)
+      }
+    })
+    lifecycles.clear()
   }
 
   const withState = (update) => {
@@ -149,6 +211,92 @@ export const baton = (state, show, baseEl = null) => {
   return withState
 }
 
+const presetToOptions = (preset) => {
+  switch (preset) {
+    case 'width': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          el.style.setProperty("--width", el.scrollWidth + "px")
+        }
+      }
+    }
+    case 'height': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          el.style.setProperty("--height", el.scrollHeight + "px")
+        }
+      }
+    }
+    case 'details': {
+      return {
+        target: ':scope > *:nth-child(2)', 
+        onstart: (el, name, newValue, oldValue) => {
+          const p = el.querySelector(':scope > *:nth-child(2)')
+          if (! newValue) {
+            el.open = true
+          }
+          p.style.setProperty("--height", p.scrollHeight + "px")
+        }, 
+        onfinish: (el, name, newValue, oldValue) => {
+          if (! newValue) {
+            el.open = false
+          }
+        }
+      }
+    }
+    case 'size': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          el.style.setProperty("--width", el.scrollWidth + "px")
+          el.style.setProperty("--height", el.scrollHeight + "px")
+        }
+      }
+    }
+    case 'popup': {
+      return {
+        onstart: (el, name, newValue, oldValue) => {
+          const rect = el.getBoundingClientRect()
+          el.style.setProperty("--width", rect.width + "px")
+          el.style.setProperty('--height', rect.height + 'px')
+          if (newValue) {
+            const callerEl = document.getElementById(newValue)
+            const callerRect = callerEl.getBoundingClientRect()
+            const ww = document.documentElement.clientWidth  // TODO: is this correct?
+            const wh = window.innerHeight  // TODO: is this correct?
+            let left, right, top, bottom
+            if (callerRect.left + rect.width <= ww) {
+              left = callerRect.left + "px"
+              right = "auto"
+            } else if (callerRect.right - rect.width >= 0) {
+              left = "auto"
+              right = (ww - callerRect.right) + "px"
+            } else {
+              left = ((ww - rect.width) * 0.5) + "px"
+              right = "auto"
+            }
+            if (callerRect.bottom + rect.height <= wh) {
+              top = callerRect.bottom + "px"
+              bottom = "auto"
+            } else if (callerRect.bottom - rect.height >= 0) {
+              top = "auto"
+              bottom = (wh - callerRect.top) + "px"
+            } else {
+              top = ((wh - rect.height) * 0.5) + "px"
+              bottom = "auto"
+            }
+            el.style.setProperty('--left', left)
+            el.style.setProperty('--right', right)
+            el.style.setProperty('--top', top)
+            el.style.setProperty('--bottom', bottom)
+          }
+        }
+      }
+    }
+    default: 
+      throw new Error(`unknown preset "${preset}"`)
+  }
+}
+
 /**
  * options.target: css-selector
  * options.onstart: callback
@@ -156,27 +304,31 @@ export const baton = (state, show, baseEl = null) => {
  * options.timeout: number
  */
 export const cssTransition = (baseClass, options = {}) => {
-  return (el, name, value, oldValue) => {
+  if (typeof options === "string") {
+    options = presetToOptions(options)
+  }
+  return (el, name, value, oldValue, cleanup) => {
     const targetEl = (options.target) ? el.querySelector(options.target) : el
     const action = (value) ? 'enter' : 'exit'
     el.classList.add(`${baseClass}-${action}-before`)
     if (options.onstart) options.onstart(el, name, value, oldValue)
     el.classList.remove(`${baseClass}-${action}-before`)
     el.classList.add(`${baseClass}-${action}`)
-    let cleaned = false
-    const cleanup = (ev) => {
+    let finished = false
+    const finish = (ev) => {
       if (ev && ev.target !== targetEl) return
-      if (cleaned) return
-      cleaned = true
+      if (finished) return
+      finished = true
       el.classList.remove(`${baseClass}-${action}-active`)
       el.classList.remove(`${baseClass}-${action}`)
-      targetEl.removeEventListener('transitionend', cleanup)
+      targetEl.removeEventListener('transitionend', finish)
       if (options.onfinish) options.onfinish(el, name, value, oldValue)
+      if (cleanup) cleanup()
     }
     window.setTimeout(() => {
       el.classList.add(`${baseClass}-${action}-active`)
-      targetEl.addEventListener('transitionend', cleanup)
-      window.setTimeout(cleanup, options.timeout || 10000)
+      targetEl.addEventListener('transitionend', finish)
+      window.setTimeout(finish, options.timeout || 10000)
     }, 100)
   }
 }
@@ -213,5 +365,59 @@ export const debounce = (fn, interval) => {
     timerId = setTimeout(() => {
       fn(...args)
     }, interval);
+  }
+}
+
+export const diff = (newKeys, oldKeys) => {
+  let oldKeyed = {}
+  for (let i = 0; i < oldKeys.length; i++) {
+    oldKeyed[oldKeys[i]] = i
+  }
+
+  const events = []
+  let newKeyed = {}
+  let i = 0
+  let k = 0
+  while (k < newKeys.length) {
+    let oldKey = oldKeys[i]
+    let newKey = newKeys[k]
+    if (oldKey in newKeyed) {
+      i++
+      continue
+    }
+    if (newKey === oldKeys[i + 1]) {
+      i++
+      continue
+    }
+    let keyedIndex = (newKey in oldKeyed) ? oldKeyed[newKey] : null
+    if (oldKey === newKey) {
+      // match
+      i++
+    } else if (keyedIndex !== null) {
+      // move
+      const beforeKey = (k > 0) ? newKeys[k - 1] : null
+      events.push({type:'move', key:newKey, afterKey:beforeKey})
+    } else {
+      // insert
+      const beforeKey = (k > 0) ? newKeys[k - 1] : null
+      events.push({type:'insert', key:newKey, afterKey:beforeKey})
+    }
+    newKeyed[newKey] = k
+    k++
+  }
+  for (let oldKey in oldKeyed) {
+    if (!(oldKey in newKeyed)) {
+      events.push({type:'remove', key:oldKey})
+    }
+  }
+
+  return events
+}
+
+const createElement = (template, parent) => {
+  if (template instanceof HTMLTemplateElement) {
+    return template.content.firstElementChild.cloneNode(true)
+  } else {
+    return template.cloneNode(true)
   }
 }
