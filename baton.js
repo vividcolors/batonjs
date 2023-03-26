@@ -137,6 +137,7 @@ export const baton = (state, show, baseEl = null) => {
               const c = (template instanceof HTMLTemplateElement) ? template.content.firstElementChild.cloneNode(true)
                       : template.cloneNode(true)
               c.dataset.batonKey = ev.key
+              delete c.batonUnmounted
               const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
               el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
               lifecycles.set(c, true)
