@@ -134,7 +134,8 @@ export const baton = (state, show, baseEl = null) => {
         for (let ev of diff(newKeys, oldKeys)) {
           switch (ev.type) {
             case 'insert': {
-              const c = createElement(template, el)
+              const c = (template instanceof HTMLTemplateElement) ? template.content.firstElementChild.cloneNode(true)
+                      : template.cloneNode(true)
               c.dataset.batonKey = ev.key
               const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
               el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
@@ -209,6 +210,52 @@ export const baton = (state, show, baseEl = null) => {
   reflect()
 
   return withState
+}
+
+export const diff = (newKeys, oldKeys) => {
+  let oldKeyed = {}
+  for (let i = 0; i < oldKeys.length; i++) {
+    oldKeyed[oldKeys[i]] = i
+  }
+
+  const events = []
+  let newKeyed = {}
+  let i = 0
+  let k = 0
+  while (k < newKeys.length) {
+    let oldKey = oldKeys[i]
+    let newKey = newKeys[k]
+    if (oldKey in newKeyed) {
+      i++
+      continue
+    }
+    if (newKey === oldKeys[i + 1]) {
+      i++
+      continue
+    }
+    let keyedIndex = (newKey in oldKeyed) ? oldKeyed[newKey] : null
+    if (oldKey === newKey) {
+      // match
+      i++
+    } else if (keyedIndex !== null) {
+      // move
+      const beforeKey = (k > 0) ? newKeys[k - 1] : null
+      events.push({type:'move', key:newKey, afterKey:beforeKey})
+    } else {
+      // insert
+      const beforeKey = (k > 0) ? newKeys[k - 1] : null
+      events.push({type:'insert', key:newKey, afterKey:beforeKey})
+    }
+    newKeyed[newKey] = k
+    k++
+  }
+  for (let oldKey in oldKeyed) {
+    if (!(oldKey in newKeyed)) {
+      events.push({type:'remove', key:oldKey})
+    }
+  }
+
+  return events
 }
 
 const presetToOptions = (preset) => {
@@ -365,59 +412,5 @@ export const debounce = (fn, interval) => {
     timerId = setTimeout(() => {
       fn(...args)
     }, interval);
-  }
-}
-
-export const diff = (newKeys, oldKeys) => {
-  let oldKeyed = {}
-  for (let i = 0; i < oldKeys.length; i++) {
-    oldKeyed[oldKeys[i]] = i
-  }
-
-  const events = []
-  let newKeyed = {}
-  let i = 0
-  let k = 0
-  while (k < newKeys.length) {
-    let oldKey = oldKeys[i]
-    let newKey = newKeys[k]
-    if (oldKey in newKeyed) {
-      i++
-      continue
-    }
-    if (newKey === oldKeys[i + 1]) {
-      i++
-      continue
-    }
-    let keyedIndex = (newKey in oldKeyed) ? oldKeyed[newKey] : null
-    if (oldKey === newKey) {
-      // match
-      i++
-    } else if (keyedIndex !== null) {
-      // move
-      const beforeKey = (k > 0) ? newKeys[k - 1] : null
-      events.push({type:'move', key:newKey, afterKey:beforeKey})
-    } else {
-      // insert
-      const beforeKey = (k > 0) ? newKeys[k - 1] : null
-      events.push({type:'insert', key:newKey, afterKey:beforeKey})
-    }
-    newKeyed[newKey] = k
-    k++
-  }
-  for (let oldKey in oldKeyed) {
-    if (!(oldKey in newKeyed)) {
-      events.push({type:'remove', key:oldKey})
-    }
-  }
-
-  return events
-}
-
-const createElement = (template, parent) => {
-  if (template instanceof HTMLTemplateElement) {
-    return template.content.firstElementChild.cloneNode(true)
-  } else {
-    return template.cloneNode(true)
   }
 }
