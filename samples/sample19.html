@@ -31,13 +31,7 @@
     <script type="module">
       import {baton, cssTransition} from '../baton.js'
       const template = document.getElementById("template")
-      const fade = cssTransition('transition', {
-        onfinish: (el, _name, value, oldValue) => {
-          if (! value) {
-            el.parentNode.removeChild(el)
-          }
-        }
-      })
+      const fade = cssTransition('transition')
       const state = {items:["1"]}
       const onremove = (ev) => {
         const index = ev.target.dataset.index
