@@ -1,0 +1,154 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sortable ToDo List by Sortablejs</title>
+  </head>
+  <body>
+    <style>
+      .sortable-ghost {opacity:0.3;}
+      .li {
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .li.transition-enter {
+        transition: height 0.2s linear;
+        height: 0;
+      }
+      .li.transition-enter-active {
+        height: var(--height);
+      }
+      .li.transition-exit {
+        transition: height 0.2s linear;
+        height: var(--height);
+      }
+      .li.transition-exit-active {
+        height: 0;
+      }
+    </style>
+    <ul id="todos">
+    </ul>
+    <div id="append">
+      <input type="text" name="what" /> on <input type="date" name="when" /><button type="button">Append</button>
+    </div>
+    <template id="template">
+      <li class="li">
+        <input type="checkbox" name="done" />
+        <span class="what"></span> on <span class="when"></span>
+        <button type="button" name="remove">Remove</button>
+      </li>
+    </template>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script type="module">
+      import {baton, cssTransition} from '../baton.js'
+      const state = {todos:[], form:{what:'', when:''}, nextId:1}
+      const onDone = (ev) => {
+        const i = +(ev.target.parentNode.dataset.index)
+        withState(state => {
+          const todo = {...state.todos[i], done:true}
+          const todos = [...state.todos]
+          todos[i] = todo
+          return {...state, todos}
+        })
+      }
+      const onRemove = (ev) => {
+        const i = +(ev.target.parentNode.dataset.index)
+        withState(state => {
+          const todos = state.todos.filter((todo, j) => i != j)
+          return {...state, todos}
+        })
+      }
+      const onAppend = (ev) => {
+        withState(state => {
+          // validation
+          if (!state.form.what || !state.form.when) {
+            alert('Input what and when!!')
+            return
+          }
+          const todo = {done:false, id:state.nextId, what:state.form.what, when:state.form.when}
+          const todos = [...state.todos]
+          todos.push(todo)
+          return {...state, todos, form:{what:'', when:''}, nextId:state.nextId + 1}
+        })
+      }
+      const onInput = (ev) => {
+        withState(state => {
+          const form = {...state.form, [ev.target.name]:ev.target.value}
+          return {...state, form}
+        })
+      }
+      const onSort = ({fromIndex, toIndex}) => {
+        withState(state => {
+          const todos = [...state.todos]
+          const todo = todos[fromIndex]
+          todos.splice(fromIndex, 1)
+          todos.splice(toIndex, 0, todo)
+          return {...state, todos}
+        })
+      }
+      const show = (state) => {
+        return {
+          "#todos": {
+            children: [state.todos.map(todo => ""+todo.id), document.getElementById('template')], 
+            li: (el, i) => {
+              const todo = state.todos[i]
+              return {
+                "data-index": "" + i, 
+                "[name=done]": {
+                  checked: todo.done, 
+                  disabled: todo.done ? "disabled" : "", 
+                  onchange: onDone
+                }, 
+                ".what": {
+                  innerText: todo.what
+                }, 
+                ".when": {
+                  innerText: todo.when
+                }, 
+                "[name=remove]": {
+                  onclick: onRemove
+                }, 
+                "&mounted": cssTransition("transition", "height")
+              }
+            }
+          }, 
+          "#append": {
+            "[name=what]": {
+              oninput: onInput, 
+              value: state.form.what
+            }, 
+            "[name=when]": {
+              onchange: onInput, 
+              value: state.form.when
+            }, 
+            "button": {
+              onclick: onAppend
+            }
+          }
+        }
+      }
+      const withState = baton(state, show)
+      const initializeSortable = (el) => {
+        let marker = null
+        Sortable.create(el, {
+          animation: 150, 
+          onStart: (ev) => {
+            marker = ev.item.nextElementSibling
+          }, 
+          onEnd: (ev) => {
+            setTimeout(() => {
+              // rollback the sort, then replay the sort via state update
+              ev.from.insertBefore(ev.item, marker)
+              marker = null
+              onSort({
+                fromIndex: ev.oldIndex, 
+                toIndex: ev.newIndex
+              })
+            }, 0)
+          }
+        })
+      }
+      initializeSortable(document.getElementById('todos'))
+    </script>
+  </body>
+</html>
