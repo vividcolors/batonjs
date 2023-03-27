@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carousel Slider</title>
+  </head>
+  <body>
+    <style>
+      body {
+        margin: 0;
+      }
+      .frame {
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+        max-width: 100%;
+      }
+      .frame ul {
+        display: flex;
+        flex-direction: row;
+        width: calc(100% * 0.8 * calc(4 + 2));
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        transition: transform 0.2s ease-in-out;
+        transform: translateX(var(--shift, 0));
+      }
+      .frame ul li {
+        width: calc(100% / calc(4 + 2));
+        padding: 0 10px;
+      }
+      .frame ul li img {
+        display: block;
+        object-fit: contain;
+        width: 100%;
+      }
+      .controls {
+        text-align: center;
+      }
+      .controls .goto.is-current {
+        color: green;
+      }
+    </style>
+    <div class="frame">
+      <ul>
+        <li><img src="https://picsum.photos/seed/slide3/800/450" /></li>
+        <li><img src="https://picsum.photos/seed/slide0/800/450" data-index="0" /></li>
+        <li><img src="https://picsum.photos/seed/slide1/800/450" data-index="1" /></li>
+        <li><img src="https://picsum.photos/seed/slide2/800/450" data-index="2" /></li>
+        <li><img src="https://picsum.photos/seed/slide3/800/450" data-index="3" /></li>
+        <li><img src="https://picsum.photos/seed/slide0/800/450" /></li>
+      </ul>
+    </div>
+    <div class="controls">
+      <button type="button" class="prev">Prev</button>
+      <button type="button" class="goto" data-index="0">0</button>
+      <button type="button" class="goto" data-index="1">1</button>
+      <button type="button" class="goto" data-index="2">2</button>
+      <button type="button" class="goto" data-index="3">3</button>
+      <button type="button" class="next">Next</button>
+    </div>
+    <script type="module">
+      import {baton} from '../baton.js'
+      const state = {current:0}
+      const toPrev = (ev) => {
+        withState(({current}) => ({current: current - 1}))
+      }
+      const toNext = (ev) => {
+        withState(({current}) => ({current: (current + 1) % 4}))
+      }
+      const toIndex = (ev) => {
+        const current = +ev.target.dataset.index
+        withState(state => ({current}))
+      }
+      const show = ({current}) => {
+        const len = 4 + 2
+        return {
+          ".frame ul": {
+            "style---shift": `calc(-100% * ${current + 1} / ${len} + 50vw - 100% / ${len} * 0.5)`
+          }, 
+          ".prev": {onclick: toPrev, disabled: current == 0}, 
+          ".next": {onclick: toNext, disabled: current == 3}, 
+          ".goto": (el) => ({onclick: toIndex, "class-is-current": el.dataset.index === "" + current})
+        }
+      }
+      const withState = baton(state, show)
+      setInterval(toNext, 5000)
+    </script>
+  </body>
+</html>
