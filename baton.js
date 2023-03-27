@@ -188,7 +188,8 @@ export const baton = (state, show, baseEl = null) => {
   }
 
   const reflect = () => {
-    const decls = show(state)
+    const decls0 = show(state)
+    const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
     dispatchElement(decls, baseEl)
     
     // There may be elements without declarations. We process them here.
