@@ -1,0 +1,22 @@
+{
+    "name": "@vividcolors/batonjs", 
+    "version": "0.0.1", 
+    "description": "Declarative UI framework for the Web that is easy to deploy and collaborative.", 
+    "keywords": ["framework", "frontend", "web", "app", "ui"], 
+    "homepage": "https://github.com/vividcolors/batonjs", 
+    "bugs": {
+        "url": "https://github.com/vividcolors/batonjs/issues"
+    }, 
+    "license": "MIT", 
+    "author": {
+        "name": "Tetsuo Yamada", 
+        "email": "tyam@vividcolors.co.jp"
+    }, 
+    "repository": {
+        "type": "git", 
+        "url": "https://github.com/vividcolors/batonjs.git"
+    }, 
+    "dependencies": {}, 
+    "devDependencies": {}, 
+    "scripts": {}
+}
