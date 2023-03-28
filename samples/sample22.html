@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Loading batonjs in UMD format</title>
+  </head>
+  <body>
+    <p>Count: <span id="counter"></span></p>
+    <button id="button" type="button">increment</button>
+    <script src="../dist/baton.umd.js"></script>
+    <script type="module">
+      const baton = batonjs.baton
+      const state = {count:0}
+      function show(state) {
+        return {
+          "#counter": {
+            innerText: state.count
+          }
+        }
+      }
+      document.getElementById('button').addEventListener('click', (ev) => {
+        withState(state => ({count: state.count + 1}))
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
