@@ -13,7 +13,7 @@
     <button id="button1" data-property="isRed">Toggle color</button>
     <button id="button2" data-property="isLarge">Toggle size</button>
     <script type="module">
-      import {baton} from '../baton.js'
+      import {baton} from '../dist/baton.esm.js'
       const state = {isRed:false, isLarge:false}
       const toggle = (ev) => {
         withState((state) => {
