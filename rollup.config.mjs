@@ -42,7 +42,7 @@ export default [
     output: {
       file: 'dist/baton.cjs.js', 
       format: 'cjs', 
-      sourcempa: true
+      sourcemap: true
     }
   }, 
   {
@@ -50,7 +50,7 @@ export default [
     output: {
       file: 'dist/baton.cjs.min.js', 
       format: 'cjs', 
-      sourcempa: true, 
+      sourcemap: true, 
       plugins: [terser()]
     }
   }
