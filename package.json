@@ -21,16 +21,19 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/vividcolors/batonjs.git"
-    }, 
+    },
+    "type": "module", 
     "dependencies": {},
     "devDependencies": {
         "@rollup/plugin-terser": "^0.4.0",
+        "jsdom": "^21.1.1",
         "rollup": "^3.20.2"
     },
     "scripts": {
-        "build": "rollup -c"
-    }, 
-    "main": "dist/baton.cjs.js", 
-    "module": "dist/baton.esm.js", 
+        "build": "rollup -c", 
+        "doc": "node doc/script/convert.js"
+    },
+    "main": "dist/baton.cjs.js",
+    "module": "dist/baton.esm.js",
     "browser": "dist/baton.umd.js"
 }
