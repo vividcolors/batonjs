@@ -24,6 +24,16 @@ export const baton = (state, show, baseEl = null) => {
     }
   }
 
+  const collectKeys = (parent) => {
+    const keys = []
+    for (let c = parent.firstChild; c; c = c.nextSibling) {
+      if (c.nodeType === c.ELEMENT_NODE && c.hasAttribute("data-baton-key")) {
+        keys.push(c.getAttribute("data-baton-key"))
+      }
+    }
+    return keys
+  }
+
   const dispatchElement = (decls, el) => {
     const callbacks = []
     
@@ -39,6 +49,7 @@ export const baton = (state, show, baseEl = null) => {
             el.batonCache = {}
           }
           if (name in el.batonCache) {
+            // TODO: we should obtain oldValue even if el.batonCache[name] is missing.
             const oldValue = el.batonCache[name]
             if (oldValue !== value) {
               callbacks.push([decls[observerName], el, name, value, oldValue, null])
@@ -126,37 +137,36 @@ export const baton = (state, show, baseEl = null) => {
       if (! el.batonCache) {
         el.batonCache = {}
       }
-      if (el.batonCache.children) {
-        const keyToEl = {}
-        for (let c of el.childNodes) {
-          if (c.hasAttribute('data-baton-key') && c.getAttribute('data-baton-key')) {
-            keyToEl[c.getAttribute('data-baton-key')] = c
-          }
+      const keyToEl = {}
+      for (let c of el.childNodes) {
+        if (c.nodeType === c.ELEMENT_NODE && c.hasAttribute('data-baton-key') && c.getAttribute('data-baton-key')) {
+          keyToEl[c.getAttribute('data-baton-key')] = c
         }
-        const oldKeys = el.batonCache.children
-        for (let ev of diff(newKeys, oldKeys)) {
-          switch (ev.type) {
-            case 'insert': {
-              const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
-                      : template.cloneNode(true)
-              c.setAttribute('data-baton-key', ev.key)
-              delete c.batonUnmounted
-              const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
-              el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
-              lifecycles.set(c, true)
-              break
-            }
-            case 'move': {
-              const c = keyToEl[ev.key]
-              const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
-              el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
-              break
-            }
-            case 'remove': {
-              const c = keyToEl[ev.key]
-              lifecycles.set(c, false)
-              break
-            }
+      }
+      const oldKeys = (el.batonCache && el.batonCache.children) ? el.batonCache.children : collectKeys(el)
+      for (let ev of diff(newKeys, oldKeys)) {
+        switch (ev.type) {
+          case 'insert': {
+            const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
+                    : template.cloneNode(true)
+            c.setAttribute('data-baton-key', ev.key)
+            delete c.batonUnmounted
+            const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
+            el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+            lifecycles.set(c, true)
+            keyToEl[ev.key] = c
+            break
+          }
+          case 'move': {
+            const c = keyToEl[ev.key]
+            const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
+            el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
+            break
+          }
+          case 'remove': {
+            const c = keyToEl[ev.key]
+            lifecycles.set(c, false)
+            break
           }
         }
       }
@@ -195,7 +205,7 @@ export const baton = (state, show, baseEl = null) => {
     const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
     dispatchElement(decls, baseEl)
     
-    // There may be elements without declarations. We process them here.
+    // There may be elements without UI declarations. We process them here.
     lifecycles.forEach((lifecycle, el) => {
       if (! lifecycle) {
         el.parentNode.removeChild(el)
