@@ -7,6 +7,9 @@ export const baton = (state, show, baseEl = null) => {
     throw new Error("`state' is out of range")
   }
   if (! baseEl) {
+    if (! document) {
+      throw new Error("`baseEl' is required")
+    }
     baseEl = document.documentElement
   }
 
@@ -126,17 +129,17 @@ export const baton = (state, show, baseEl = null) => {
       if (el.batonCache.children) {
         const keyToEl = {}
         for (let c of el.childNodes) {
-          if (c.dataset && c.dataset.batonKey) {
-            keyToEl[c.dataset.batonKey] = c
+          if (c.hasAttribute('data-baton-key') && c.getAttribute('data-baton-key')) {
+            keyToEl[c.getAttribute('data-baton-key')] = c
           }
         }
         const oldKeys = el.batonCache.children
         for (let ev of diff(newKeys, oldKeys)) {
           switch (ev.type) {
             case 'insert': {
-              const c = (template instanceof HTMLTemplateElement) ? template.content.firstElementChild.cloneNode(true)
+              const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
                       : template.cloneNode(true)
-              c.dataset.batonKey = ev.key
+              c.setAttribute('data-baton-key', ev.key)
               delete c.batonUnmounted
               const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
               el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
