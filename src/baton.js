@@ -429,3 +429,75 @@ export const debounce = (fn, interval) => {
     }, interval);
   }
 }
+
+export const typeOf = (x) => {
+  if (x === null) return "null"
+  else if (Array.isArray(x)) return "array"
+  else return (typeof x)
+}
+
+export const insert = (key, value, vs) => {
+  switch (typeOf(vs)) {
+    case 'array': {
+      const rv = vs.concat()
+      if (key < 0 || key > rv.length) throw new Error(`key: out of range (${key})`)
+      rv.splice(key, 0, value)
+      return rv
+    }
+    case 'object': {
+      const rv = Object.assign({}, vs)
+      if (key in rv) throw new Error(`key: out of range (${key})`)
+      rv[key] = value
+      return rv
+    }
+    default: 
+      throw new Error("`vs': unknown value")
+  }
+}
+
+export const remove = (key, vs) => {
+  switch (typeOf(vs)) {
+    case 'array': {
+      const rv = vs.concat()
+      if (key < 0 || key >= rv.length) throw new Error(`key: out of range (${key})`)
+      rv.splice(key, 1)
+      return rv
+    }
+    case 'object': {
+      const rv = Object.assign({}, vs)
+      if (! (key in rv)) throw new Error(`key: out of range (${key})`)
+      delete rv[key]
+      return rv
+    }
+    default: 
+      throw new Error("`vs': unknown value")
+  }
+}
+
+export const update = (...args) => {
+  const vs = args.at(-1)
+  switch (typeOf(vs)) {
+    case 'array': {
+      const rv = vs.concat()
+      for (let i = 0; i < args.length - 1; i += 2) {
+        const key = args[i]
+        const value = args[i + 1]
+        if (key < 0 || key >= rv.length) throw new Error(`key: out of range (${key})`)
+        rv[key] = value
+      }
+      return rv
+    }
+    case 'object': {
+      const rv = Object.assign({}, vs)
+      for (let i = 0; i < args.length - 1; i += 2) {
+        const key = args[i]
+        const value = args[i + 1]
+        if (! (key in rv)) throw new Error(`key: out of range (${key})`)
+        rv[key] = value
+      }
+      return rv
+    }
+    default: 
+      throw new Error("`vs': unknown value")
+  }
+}
