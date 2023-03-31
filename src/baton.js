@@ -501,3 +501,10 @@ export const update = (...args) => {
       throw new Error("`vs': unknown value")
   }
 }
+
+export const sort = (compare, vs) => {
+  if (typeOf(vs) !== "array") throw new Error(`vs': unknown value`)
+  const rv = [].concat(vs)
+  rv.sort(compare)
+  return rv
+}
