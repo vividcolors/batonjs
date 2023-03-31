@@ -29,24 +29,17 @@
       <li><span></span><button type="button" class="removeButton">Remove</button></li>
     </template>
     <script type="module">
-      import {baton, cssTransition} from '../dist/baton.esm.js'
+      import {baton, cssTransition, insert, remove} from '../dist/baton.esm.js'
       const template = document.getElementById("template")
       const fade = cssTransition('transition')
       const state = {items:["1"]}
       const onremove = (ev) => {
         const index = ev.target.dataset.index
-        withState(state => {
-          const items = [...state.items]
-          items.splice(index, 1)
-          return {...state, items}
-        })
+        withState(state => ({...state, items:remove(index, state.items)}))
       }
       const onappend = (ev) => {
-        withState(state => {
-          const items = [...state.items]
-          items.push("" + Date.now())
-          return {...state, items}
-        })
+        const item = "" + Date.now()
+        withState(state => ({...state, items:insert(state.items.length, item, state.items)}))
       }
       const show = (state) => ({
         ul: {

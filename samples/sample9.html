@@ -15,16 +15,16 @@
       <sl-button slot="footer" variant="primary" id="closeButton">Close</sl-button>
     </sl-drawer>
     <script type="module">
-      import {baton} from '../dist/baton.esm.js'
+      import {baton, update} from '../dist/baton.esm.js'
       const state = {color:"", drawerOpen:false}
       const onchange = (ev) => {
-        withState((state) => ({...state, color:ev.currentTarget.value}))
+        withState((state) => update("color", ev.currentTarget.value, state))
       }
       const onopen = (ev) => {
-        withState((state) => ({...state, drawerOpen:true}))
+        withState((state) => update("drawerOpen", true, state))
       }
       const onclose = (ev) => {
-        withState((state) => ({...state, drawerOpen:false}))
+        withState((state) => update("drawerOpen", false, state))
       }
       const show = (state) => {
         return {

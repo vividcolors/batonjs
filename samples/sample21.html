@@ -40,23 +40,19 @@
     </template>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script type="module">
-      import {baton, cssTransition} from '../dist/baton.esm.js'
+      import {baton, cssTransition, insert, remove, update} from '../dist/baton.esm.js'
       const state = {todos:[], form:{what:'', when:''}, nextId:1}
       const onDone = (ev) => {
         const i = +(ev.target.parentNode.dataset.index)
         withState(state => {
-          const todo = {...state.todos[i], done:true}
-          const todos = [...state.todos]
-          todos[i] = todo
-          return {...state, todos}
+          const todo = update("done", true, state.todos[i])
+          const todos = update(i, todo, state.todos)
+          return update("todos", todos, state)
         })
       }
       const onRemove = (ev) => {
         const i = +(ev.target.parentNode.dataset.index)
-        withState(state => {
-          const todos = state.todos.filter((todo, j) => i != j)
-          return {...state, todos}
-        })
+        withState(state => update("todos", remove(i, state.todos), state))
       }
       const onAppend = (ev) => {
         withState(state => {
@@ -66,24 +62,20 @@
             return
           }
           const todo = {done:false, id:state.nextId, what:state.form.what, when:state.form.when}
-          const todos = [...state.todos]
-          todos.push(todo)
-          return {...state, todos, form:{what:'', when:''}, nextId:state.nextId + 1}
+          const todos = insert(state.todos.length, todo, state.todos)
+          return update("todos", todos, "form", {what:'', when:''}, "nextId", state.nextId + 1, state)
         })
       }
       const onInput = (ev) => {
         withState(state => {
-          const form = {...state.form, [ev.target.name]:ev.target.value}
-          return {...state, form}
+          const form = update(ev.target.name, ev.target.value, state.form)
+          return update("form", form, state)
         })
       }
       const onSort = ({fromIndex, toIndex}) => {
         withState(state => {
-          const todos = [...state.todos]
-          const todo = todos[fromIndex]
-          todos.splice(fromIndex, 1)
-          todos.splice(toIndex, 0, todo)
-          return {...state, todos}
+          const todos = insert(toIndex, state.todos[fromIndex], remove(fromIndex, state.todos))
+          return update("todos", todos, state)
         })
       }
       const show = (state) => {
