@@ -2,6 +2,7 @@
 
 export const baton = (state, show, baseEl = null) => {
   const lifecycles = new Map()
+  let reflectionScheduled = false
 
   if ((state === null || typeof state === "undefined")) {
     throw new Error("`state' is out of range")
@@ -202,6 +203,8 @@ export const baton = (state, show, baseEl = null) => {
   }
 
   const reflect = () => {
+    reflectionScheduled = false
+    
     const decls0 = show(state)
     const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
     dispatchElement(decls, baseEl)
@@ -215,15 +218,22 @@ export const baton = (state, show, baseEl = null) => {
     lifecycles.clear()
   }
 
+  const scheduleReflection = () => {
+    if (! reflectionScheduled) {
+      setTimeout(reflect)
+      reflectionScheduled = true
+    }
+  }
+
   const withState = (update) => {
     const state0 = update(state)
     if ((state0 !== null && typeof state0 !== "undefined") && state0 !== state) {
       state = state0
-      reflect()
+      scheduleReflection()
     }
   }
 
-  reflect()
+  scheduleReflection()
 
   return withState
 }

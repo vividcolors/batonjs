@@ -30,6 +30,19 @@ const buildToc = (lang, dom, config) => {
   return ul.outerHTML
 }
 
+const checkUpdated = (document) => {
+  return new Promise(resolve => {
+    const check = () => {
+      if (document.querySelector("#header").children.length) {
+        resolve()
+      } else {
+        setTimeout(check, 100)
+      }
+    }
+    setTimeout(check)
+  })
+}
+
 const run1 = async (lang, config, inPath, outPath) => {
   const dom = await readFile(inPath).then(str => (new JSDOM(str)))
 
@@ -42,6 +55,7 @@ const run1 = async (lang, config, inPath, outPath) => {
     toc: buildToc(lang, dom, config)
   }
   baton(state, show, dom.window.document)
+  await checkUpdated(dom.window.document)
 
   const output = dom.serialize()
   console.log('out: ', outPath)
