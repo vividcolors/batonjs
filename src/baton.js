@@ -275,20 +275,6 @@ export const diff = (newKeys, oldKeys) => {
 
 const presetToOptions = (preset) => {
   switch (preset) {
-    case 'width': {
-      return {
-        onstart: (el, name, newValue, oldValue) => {
-          el.style.setProperty("--width", el.scrollWidth + "px")
-        }
-      }
-    }
-    case 'height': {
-      return {
-        onstart: (el, name, newValue, oldValue) => {
-          el.style.setProperty("--height", el.scrollHeight + "px")
-        }
-      }
-    }
     case 'details': {
       return {
         target: ':scope > *:nth-child(2)', 
@@ -297,7 +283,9 @@ const presetToOptions = (preset) => {
           if (! newValue) {
             el.open = true
           }
-          p.style.setProperty("--height", p.scrollHeight + "px")
+          const rect = p.getBoundingClientRect()
+          p.style.setProperty("--width", rect.width + "px")
+          p.style.setProperty("--height", rect.height + "px")
         }, 
         onfinish: (el, name, newValue, oldValue) => {
           if (! newValue) {
@@ -309,8 +297,9 @@ const presetToOptions = (preset) => {
     case 'size': {
       return {
         onstart: (el, name, newValue, oldValue) => {
-          el.style.setProperty("--width", el.scrollWidth + "px")
-          el.style.setProperty("--height", el.scrollHeight + "px")
+          const rect = el.getBoundingClientRect()
+          el.style.setProperty("--width", rect.width + "px")
+          el.style.setProperty("--height", rect.height + "px")
         }
       }
     }
