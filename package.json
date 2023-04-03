@@ -31,7 +31,8 @@
     },
     "scripts": {
         "build": "rollup -c", 
-        "doc": "node doc/script/convert.js"
+        "doc": "node doc/script/convert.js", 
+        "test": "node test/dataman.js"
     },
     "main": "dist/baton.cjs.js",
     "module": "dist/baton.esm.js",
