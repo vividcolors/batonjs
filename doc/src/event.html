@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>baton</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>イベントフィルター</h1>
+          <h4>イベントハンドラーの実行をフィルターする関数群です。これらはbatonjsに同梱されています。</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="debounce">debounce</h2>
+
+          <p>関数の実行を指定時間だけ遅らせ、その待っている間にまた関数が呼び出されたら、その時点を起点にさらに実行を遅らせます。結果として、関数の呼び出しが連続しても最後の1回だけが実行されるようになります。</p>
+
+          <p>リサイズイベントやマウスムーブイベントなどの処理でプログラムのパフォーマンス向上に使える場合があります。これらのイベントは、連続で発生するがそのすべてを処理する必要はなく、最後だけ処理すれば十分な場合が多くあるからです。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">element.addEventListener("resize", debounce(myEventHandler, 300))</code></pre>
+          
+          <h5>パラメーター</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">型</th>
+                <th scope="col">デフォルト</th>
+                <th scope="col">説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>関数</td>
+                <td>省略不可</td>
+                <td>オリジナルの関数。オリジナルの関数は、任意の数の引数を受け取り、値を返却しない関数です。</td>
+              </tr>
+              <tr>
+                <td>delay</td>
+                <td>number</td>
+                <td>省略不可</td>
+                <td>関数の実行を遅らせる時間をミリ秒（1/1000秒）で指定します。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h5>返却値</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">型</th>
+                <th scope="col">説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>関数</td>
+                <td>フィルタを適用された関数</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2 id="throttle">throttle</h2>
+
+          <p>関数の実行が指定した間隔の内で高々1回になるように調節します。</p>
+
+          <p>スクロールイベントなどの処理でプログラムのパフォーマンス向上に使える場合があります。これらのイベントは、連続で発生するがそのすべてを処理するとプログラムの実行が遅くなりすぎる場合があるからです。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">element.addEventListener("scroll", throttle(myEventHandler, 300))</code></pre>
+
+          <h5>パラメーター</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">型</th>
+                <th scope="col">デフォルト</th>
+                <th scope="col">説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>関数</td>
+                <td>省略不可</td>
+                <td>オリジナルの関数。オリジナルの関数は、任意の数の引数を受け取り、値を返却しない関数です。</td>
+              </tr>
+              <tr>
+                <td>interval</td>
+                <td>number</td>
+                <td>省略不可</td>
+                <td>関数の実行間隔をミリ秒（1/1000秒）で指定します。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h5>返却値</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">型</th>
+                <th scope="col">説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>関数</td>
+                <td>フィルタを適用された関数</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

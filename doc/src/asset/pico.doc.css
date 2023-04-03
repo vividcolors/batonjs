@@ -309,7 +309,7 @@
   /**
    * Docs: Code
    */
-  article > footer.code {
+  /*article > footer.code {
     background: var(--article-code-background-color);
   }
   
@@ -363,7 +363,7 @@
   [data-theme=valid]:before {
     background: var(--valid-color);
     content: "Great";
-  }
+  }*/
   
   /**
    * Docs: Modal
@@ -399,7 +399,7 @@
   /**
    * Docs: Navs
    */
-  body > nav {
+  /*body > nav {
     --nav-link-spacing-vertical: 1rem;
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     z-index: 99;
@@ -447,7 +447,7 @@
     body > nav ul:first-of-type li:nth-of-type(2) {
       display: inline;
     }
-  }
+  }*/
   
   /**
    * Docs: Theme switcher

@@ -1,24 +1,124 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>batonjs</title>
+    <title>baton</title>
   </head>
   <body>
     <nav class="container-fluid" id="header"></nav>
     <main class="container">
       <aside id="sidebar"></aside>
       <div role="document">
+        <hgroup>
+          <h1>batonjs</h1>
+          <h4>導入しやすく協調的な、Web向け宣言型UIフレームワーク</h4>
+        </hgroup>
+
+        <ul>
+          <li>導入しやすい<br /><small>Node.js、webpack、Babel等のツールは不要。CDNでロードするだけで始められます</small></li>
+          <li>協調的<br /><small>DOMを専有しないので、HTMLを出力するPHPやDOM要素を直接変更するjQueryなどと共存できます</small></li>
+          <li>ワンストップ<br /><small>他のライブラリは不要。これだけで宣言的にUIの状態を管理できます</small></li>
+          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、少しの学習ですぐに使えるようになります</small></li>
+          <li>保守しやすい<br /><small>枠組みに沿って書けば自然とコードが整理されるので、保守がしやすくなります</small></li>
+        </ul>
+
+        <nav id="toc" class="toc"></nav>
+
         <section>
-          <hgroup>
-            <h1>batonjs</h1>
-          </hgroup>
-          <nav id="toc" class="toc"></nav>
-          <h2 id="state">状態（state）</h2>
-          <h2 id="ui-decl">UI宣言</h2>
-          <h2 id="show">show()</h2>
-          <h2 id="with-state">withState()</h2>
-          <h2 id="baton">baton()</h2>
+          <h2 id="overview">概要</h2>
+
+          <p>簡単なクリックカウントを例に、batonjsを見てみましょう。</p>
+
+          <pre class="line-numbers"><code class="language-html">&lt;html>
+  &lt;body>
+    &lt;p>Count: &lt;span id="count">0&lt;/span>&lt;/p>
+    &lt;button id="button" type="button">Count Up&lt;/button>
+  &lt;/body>
+&lt;/html></code></pre>
+
+          <p>batonjsは既存のHTMLページにUI管理を後付けします。だからこの例でもHTMLは完全な形になっています。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">import {baton} from '../baton.js'
+const state = {count:0}
+function show(state) {
+  return {
+    "#counter": {
+      innerText: state.count
+    }
+  }
+}
+document.getElementById('button').addEventListener('click', (ev) => {
+  withState(state => ({count: state.count + 1}))
+})
+const withState = baton(state, show, document.body)</code></pre>
+
+          <p>2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonを起動するのに使います。</p>
+
+          <p>3行目の<code>show</code>関数は、ページ状態をUIに反映させる方法を指示する関数です。最新のページ状態を受け取り、それを<strong>UI宣言</strong>に変換して返却します。UI宣言とは、どのUIがどうであるべきかを表現したオブジェクトです。<br />
+          5行目の<code>#counter</code>はCSSセレクターで、6行目の<code>innerText</code>はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。</p>
+
+          <p>11行目の<code>withState</code>はページ状態を更新するための関数です。<code>withState</code>に渡したコールバック関数が新しいページ状態を返却すると、<code>withState</code>はその状態をUIに反映させます。もちろん、その過程で<code>show</code>関数が使われます。</p>
+
+          <p>13行目ではbatonjsを起動しています。batonjsを起動すると、状態を管理するための<code>withState</code>が返却されます。</p>
+
+          <p>この例は、このリポジトリのsamples/sample1.htmlに実際に動くものがあります。samplesディレクトリには他にもたくさんの動くサンプルがあります。</p>
         </section>
+
+        <section>
+          <h2 id="install">インストール</h2>
+
+          <h5>CDNから</h5>
+
+          <p>batonjsはCDNから読み込むのがおすすめです。インストールは不要です。<br />
+          あらかじめCDNからダウンロードしておき、自サーバーに配置することもできます。</p>
+
+          <p>ESモジュール形式 <strong>TODO URL</strong></p>
+
+          <pre class="line-numbers"><code class="language-html">&lt;script type="module">
+import {baton} from '../dist/baton.esm.js'
+&lt;/script></code></pre>
+
+          <p>UMD形式 <strong>TODO URL</strong></p>
+
+          <pre class="line-numbers"><code class="language-html">&lt;script src="../dist/baton.umd.js">&lt;/script>
+&lt;script>
+const baton = batonjs.baton
+&lt;/script></code></pre>
+
+          <h5>npmから</h5>
+
+          <p>npmでインストールすれば、バンドルしたりTree Shakingしたりする余地があります。<strong>TODO PACKAGE NAME</strong></p>
+
+          <pre class="line-numbers"><code class="language-shell">$ npm install batonjs</code></pre>
+
+          <p>ESモジュール形式</p>
+
+          <pre class="line-numbers"><code class="language-javascript">import {baton} from 'batonjs'</code></pre>
+
+          <p>CommonJS形式</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const {baton} = require('batonjs')</code></pre>
+        </section>
+
+        <section>
+          <h2 id="env">動作環境</h2>
+
+          <ul>
+            <li>Chrome最新版</li>
+            <li>Edge最新版</li>
+            <li>Firefox最新版</li>
+            <li>Chrome for Android最新版</li>
+            <li>iOS Safari最新版</li>
+            <li>Node.js v14以上</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 id="license">ライセンス</h2>
+
+          <p>MIT</p>
+        </section>
+
+
         <footer id="footer"></footer>
       </div>
     </main>

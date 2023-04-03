@@ -1,0 +1,226 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>baton</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>CSSトランジション</h1>
+          <h4>プロパティが変わったときにCSSトランジションを起動する仕組みです。</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="csstransition">cssTransition</h2>
+
+          <p>cssTransition関数は、CSSトランジションを起動する関数を作る関数です。作られた関数はプロパティの更新監視のコールバックとして使うことができます。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const transition = cssTransition("transition")
+const show = (state) => ({
+  ".modal": {
+    "class-is-open": state.modalIsOpen, 
+    "&class-is-open": transition
+  }
+})</code></pre>
+
+          <pre class="line-numbers"><code class="language-css">.modal.is-open {
+  display: block;
+  opacity: 1;
+}
+.modal.transition-enter {  /* モーダルが開くとき */
+  opacity: 0;
+  display: block;
+}
+.modal.transition-enter-active {
+  transition: opacity 0.2s;
+  opacity: 1;
+}
+.modal.transition-exit {  /* モーダルが閉じるとき */
+  display: block;
+}
+.modal.transition-exit-active {
+  transition: opacity 0.2s;
+  opacity: 0;
+}</code></pre>
+
+          <h5>パラメーター</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">型</th>
+                <th scope="col">デフォルト</th>
+                <th scope="col">説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>name</td>
+                <td>文字列</td>
+                <td>省略不可</td>
+                <td>付与するCSSクラスのベースとなる文字列。たとえば、この文字列を"transition"にすると、CSSクラス名は"transition-enter"、"transition-exit"などになります。</td>
+              </tr>
+              <tr>
+                <td>options</td>
+                <td>オブジェクト | "size" | "details" | "popup"</td>
+                <td><code>{}</code></td>
+                <td>CSSトランジションの挙動を拡張するオプションをオブジェクトで指定します。<br />
+                文字列を指定することもできて、その場合は組み込みの挙動（「プリセット」と呼びます）を指定します。プリセットは"size"、"details"、"popup"の3つがあります（後述）。</td>
+              </tr>
+              <tr>
+                <td>options.target</td>
+                <td>文字列</td>
+                <td>":scope"</td>
+                <td>CSSクラスを付与する対象のDOM要素をCSSセレクターで指定します。デフォルトは更新監視の対象となったDOM要素そのものです。<br />
+                セレクターによるDOM要素の抽出は、更新監視の対象であるDOM要素が起点になります。</td>
+              </tr>
+              <tr>
+                <td>options.timeout</td>
+                <td>数値</td>
+                <td>10000</td>
+                <td>CSSトランジションを強制終了するまでの時間をミリ秒（1/1000秒）で指定します。デフォルトは10秒です。<br />
+                通常、CSSトランジションはtransitionendイベントを処理することで終了します。が、なんらかの理由でそうならなかった場合に備えて、強制終了の仕組みがあります。ここで、その強制終了するまで何秒待つかを指定しているわけです。</td>
+              </tr>
+              <tr>
+                <td>options.onstart</td>
+                <td>関数</td>
+                <td><code>null</code></td>
+                <td>CSSトランジションを開始する直前に呼び出されるコールバックです。コールバックのパラメーターおよび返却値は更新監視と同じです。</td>
+              </tr>
+              <tr>
+                <td>options.onfinish</td>
+                <td>関数</td>
+                <td><code>null</code></td>
+                <td>CSSトランジションを終了する直前に呼び出されるコールバックです。コールバックのパラメーターおよび返却値は更新監視と同じです。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h5>返却値</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">型</th>
+                <th scope="col">説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>関数</td>
+                <td>呼び出されるとCSSトランジションを起動する関数。更新監視のコールバックとして使えます。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2 id="mechanism">CSSトランジションの仕組み</h2>
+
+          <p>cssTransition関数は、DOM要素に次の手順でCSSクラスの操作を行っていきます。それぞれのクラスに適切なCSSを定義することで、トランジションが実行されるようになります。</p>
+
+          <ol>
+            <li>transition-enter-beforeを追加<br /><small>この後、onstartコールバックが呼ばれます。</small></li>
+            <li>transition-enter-beforeを削除、transition-enterを追加<br /><small>この後、ブラウザにDOM要素を描画させるために、少しだけ時間を空けます。</small></li>
+            <li>transition-enter-activeを追加<br /><small>ここでCSSトランジションが開始されます。transitionendイベントを受け取ったら次に進みます。</small></li>
+            <li>transition-enter-activeおよびtransition-enterを削除<br /><small>この後、onfinishコールバックが呼ばれます。</small></li>
+          </ol>
+
+          <p>次のように各クラスを使うと良いです。</p>
+          
+          <p>transition-enterクラスでは、トランジション開始時のスタイルを定義します。モーダルなどdisplayプロパティがnoneのDOM要素の場合、それをblockに変えるのはここです。</p>
+
+          <p>transition-enter-activeクラスでは、トランジション終了時のスタイルを定義します。先の手順にもあるように、transition-enterの後にtransition-enter-activeが追加されるようになっていて、この順番でクラスを追加していくことでCSSトランジションを起動させる仕組みになっています。</p>
+
+          <p>transition-enter-beforeクラスは、トランジションを始める前の準備段階で追加されるクラスです。ある種のUIでは、トランジションを始める前に一瞬だけスタイルを変更して、そのスタイルで何らかの処理を行う必要があります。transition-enter-beforeは、そのような場面のために用意されているクラスです。</p>
+
+          <p>transition-enterなど付与されるクラス名は引数によって変わります。<br />
+          transitionの部分はcssTransition関数の第1引数として渡した文字列です。<br />
+          enterの部分は、更新監視コールバックの第3引数（newValue）が真っぽい（truthy）値の場合にenterになり、偽っぽい（falsy）値の場合にexitになります。たとえば、監視するプロパティがopenの場合、openプロパティがtrueならenter、falseならexitです。<br />
+          このように、プロパティ値がどう変わったかによってクラス名も変わるようになっているので、それぞれで別のアニメーションを使うことができます。</p>
+        </section>
+
+        <section>
+          <h2 id="size-preset">sizeプリセット</h2>
+
+          <p>CSSトランジションで面倒なのは、heightやwidthを変化させたいときです。javascriptであらかじめDOM要素のサイズを測っておき、それを変化させるようにしないといけないからです。</p>
+
+          <p>sizeプリセットを使えばこれを自動化できます。<br />
+          sizeプリセットを使うと、DOM要素が表示されているときのサイズを測って、CSSカスタム変数としてstyleプロパティにセットしてくれます。</p>
+
+          <p>sizeプリセットがセットするCSSカスタム変数は次の2つです。</p>
+
+          <dl>
+            <dt><code>--width</code></dt>
+            <dd>対象のDOM要素の幅</dd>
+            <dt><code>--height</code></dt>
+            <dd>対象のDOM要素の高さ</dd>
+          </dl>
+
+          <p>sizeプリセットはonstartコールバックの中でDOM要素のサイズを測ります。ユーザーは、onstartコールバックが呼ばれたときにDOM要素が表示されているようにする必要があります。<br />
+          そのためには、transition-enter-beforeクラスを使います。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const transition = cssTransition("transition", "size")  // sizeプリセットを指定
+const show = (state) => ({
+  ".modal": {
+    "class-is-open": state.modalIsOpen, 
+    "&class-is-open": transition
+  }
+})</code></pre>
+
+          <pre class="line-numbers"><code class="language-css">.modal.is-open, 
+.modal.transition-enter-before {  /* サイズを測るためこの行が要る */
+  display: block;
+  opacity: 1;
+}
+.modal.transition-enter {  /* モーダルが開くとき */
+  opacity: 0;
+  height: 0;
+  display: block;
+}
+.modal.transition-enter-active {
+  transition: opacity 0.2s, height 0.2s;
+  opacity: 1;
+  height: var(--height);  /* --heightを利用 */
+}
+.modal.transition-exit {  /* モーダルが閉じるとき */
+  display: block;
+  height: var(--height);  /* --heightを利用 */
+}
+.modal.transition-exit-active {
+  transition: opacity 0.2s;
+  opacity: 0;
+  height: 0;
+}</code></pre>
+        </section>
+
+        <section>
+          <h2 id="details-preset">detailsプリセット</h2>
+
+          <p>detailsプリセットはdetails/summaryの開閉にアニメーションを付けるためのプリセットです。<br />
+          アニメーションの対象はdetails要素の2番目の子要素です。1番目の子要素がsummaryなので、2番目は開閉で見えなくなるボディ部です。</p>
+
+          <p>detailsプリセットでは、sizeプリセットと同じように、ボディ部のサイズを測ってカスタム変数にセットします。ですので、detailsプリセットのユーザーは、ボディ部に対してCSSトランジションを定義する必要があります。</p>
+
+          <p>detailsプリセットの使用例はsamples 15にあります。</p>
+        </section>
+
+        <section>
+          <h2 id="popup-preset">popupプリセット</h2>
+
+          <p>popupプリセットはポップアップのスタイルを定義するためのプリセットです。<br />
+          ポップアップの表示位置を決めてサイズを測ってカスタム変数にセットしてくれます。</p>
+
+          <p>popupプリセットの使用例はsample 17にあります。</p>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

@@ -8,7 +8,9 @@
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/asset/pico.css" />
       <link rel="stylesheet" href="/asset/pico.doc.css" />
+      <link rel="stylesheet" href="/asset/prism.css" />
       <link rel="stylesheet" href="/asset/own.css" />
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </template>
     <template class="header ja">
       <ul>
@@ -16,16 +18,26 @@
         <li>Documentation</li>
       </ul>
       <ul>
-        <li><a href="#">GitHub</a></li>
-        <li><a href="#">Ja</a></li>
+        <li><a href="#" target="_blank"><img src="/asset/github-mark.png" alt="GitHub" /></a></li>
+        <li>
+          <details role="list" dir="rtl">
+            <summary aria-haspopup="listbox" role="link"><span class="material-icons">translate</span></summary>
+            <ul role="listbox">
+              <li><a>English</a></li>
+              <li><a>日本語</a></li>
+            </ul>
+          </details>
+        </li>
       </ul>
     </template>
     <template class="sidebar ja en">
       <nav class="closed-on-mobile">
         <ol>
-          <li><a href="baton.html" class="secondary">baton</a></li>
-          <li><a href="csstransition.html" class="secondary">cssTransition</a></li>
-          <li><a href="event.html" class="secondary">throttle/debounce</a></li>
+          <li><a href="baton.html" class="secondary">batonコア</a></li>
+          <li><a href="csstransition.html" class="secondary">CSSトランジション</a></li>
+          <li><a href="data.html" class="secondary">データ処理</a></li>
+          <li><a href="event.html" class="secondary">イベントフィルター</a></li>
+          <li><a</li>
         </ol>
       </nav>
     </template>
@@ -37,7 +49,9 @@
     </template>
     <template class="footer ja en">
       <hr />
-      <p><small>&copy; 2023 vividcolors, inc. Code licensed MIT</small></p>
+      <script src="/asset/prism.js"></script>
+      <p><small>&copy; 2023 <a href="https://www.vividcolors.co.jp/" target="_blank">vividcolors, inc.</a><br />
+      This beautiful site is styled by <a href="https://picocss.com/" target="_blank">Pico.css</a></small></p>
     </template>
   </body>
 </html>
