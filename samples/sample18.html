@@ -14,7 +14,6 @@
     </template>
     <script type="module">
       import {baton, insert, remove} from '../dist/baton.esm.js'
-      const template = document.getElementById("template")
       const state = {items:["1"]}
       const onremove = (ev) => {
         const index = ev.target.dataset.index
@@ -26,7 +25,8 @@
       }
       const show = (state) => ({
         ul: {
-          children: [state.items, template], 
+          childKeys: state.items, 
+          childTemplate: "#template", 
           li: (el, i) => ({
             "span": {
               innerText: state.items[i]

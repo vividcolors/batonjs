@@ -81,7 +81,8 @@
       const show = (state) => {
         return {
           "#todos": {
-            children: [state.todos.map(todo => ""+todo.id), document.getElementById('template')], 
+            childKeys: state.todos.map(todo => ""+todo.id), 
+            childTemplate: "#template", 
             li: (el, i) => {
               const todo = state.todos[i]
               return {

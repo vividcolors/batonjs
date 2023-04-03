@@ -42,7 +42,7 @@ export const baton = (state, show, baseEl = null) => {
     for (let name in decls) {
       let value = decls[name]
       if (declType(name, value) === "property") {
-        value = dispatchProperty(name, value, el)
+        value = dispatchProperty(name, value, el, decls)
         // handles update observer
         const observerName = "&" + name
         if (decls[observerName]) {
@@ -58,8 +58,8 @@ export const baton = (state, show, baseEl = null) => {
           }
           el.batonCache[name] = value
         }
-        // Always store event handlers
-        if (name[0] === 'o' && name[1] === 'n') {
+        // The following properties are always stored on cache: on*, childKeys, childTemplate
+        if ((name[0] === 'o' && name[1] === 'n') || name === "childKeys" || name === "childTemplate") {
           if (! el.batonCache) {
             el.batonCache = {}
           }
@@ -117,7 +117,7 @@ export const baton = (state, show, baseEl = null) => {
     }
   }
 
-  const dispatchProperty = (name, value, el) => {
+  const dispatchProperty = (name, value, el, decls) => {
     if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
       const eventType = name.slice(2)
       if (el.batonCache && el.batonCache[name]) {
@@ -134,21 +134,20 @@ export const baton = (state, show, baseEl = null) => {
     else if (name[0] == '&') {  // case: update handler
       // we just ignore it
     }
-    else if (name === 'children') {  // case: children special attribute
-      const [newKeys, template] = value
-      if (! el.batonCache) {
-        el.batonCache = {}
-      }
+    else if (name === 'childKeys') {  // case: childKeys special attribute
+      const newKeys = value
       const keyToEl = {}
       for (let c of el.childNodes) {
         if (c.nodeType === c.ELEMENT_NODE && c.hasAttribute('data-baton-key') && c.getAttribute('data-baton-key')) {
           keyToEl[c.getAttribute('data-baton-key')] = c
         }
       }
-      const oldKeys = (el.batonCache && el.batonCache.children) ? el.batonCache.children : collectKeys(el)
+      const oldKeys = (el.batonCache && el.batonCache.childKeys) ? el.batonCache.childKeys : collectKeys(el)
       for (let ev of diff(newKeys, oldKeys)) {
         switch (ev.type) {
           case 'insert': {
+            const selector = decls["childTemplate"]
+            const template = baseEl.querySelector(selector)
             const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
                     : template.cloneNode(true)
             c.setAttribute('data-baton-key', ev.key)
@@ -172,7 +171,9 @@ export const baton = (state, show, baseEl = null) => {
           }
         }
       }
-      el.batonCache.children = newKeys
+    }
+    else if (name === "childTemplate") {  // case: childTemplate special
+
     }
     else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
       value = "" + value
