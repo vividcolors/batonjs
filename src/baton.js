@@ -395,38 +395,39 @@ export const cssTransition = (baseClass, options = {}) => {
   }
 }
 
-export const throttle = (fn, delay) => {
+export const throttle = (fn, interval) => {
   let timerId = null
-  let lastExecTime = 0
+  let latestArgs = null
+  let needInvoke = false
   return (...args) => {
-    let elapsedTime = performance.now() - lastExecTime
-    const execute = () => {
-      fn(...args)
-      lastExecTime = performance.now()
-    }
-    if (!timerId) {
-      execute()
-    }
-    if (timerId) {
-      clearTimeout(timerId)
-    }
-    if (elapsedTime > delay) {
-      execute()
-    } else {
-      timerId = setTimeout(execute, delay)
+    latestArgs = args
+    needInvoke = true
+    if (! timerId) {
+      const invokeIfNeeded = () => {
+        if (needInvoke) {
+          fn(...latestArgs)
+          latestArgs = null
+          needInvoke = false
+          timerId = setTimeout(invokeIfNeeded, interval)
+        } else {
+          timerId = null
+        }
+      }
+      invokeIfNeeded()
     }
   }
 }
 
-export const debounce = (fn, interval) => {
+export const debounce = (fn, delay) => {
   let timerId = null
   return (...args) => {
     if (timerId) {
       clearTimeout(timerId)
     }
     timerId = setTimeout(() => {
+      timerId = null
       fn(...args)
-    }, interval);
+    }, delay);
   }
 }
 
