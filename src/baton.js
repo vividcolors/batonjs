@@ -98,6 +98,7 @@ export const baton = (state, show, baseEl = null) => {
             subEl.batonUnmounted = true
             const cleanup = () => {
               subEl.parentNode.removeChild(subEl)
+              delete subEl.batonUnmounted
             }
             if (subEl.batonLifecycle) {
               subEl.batonLifecycle(subEl, "mounted", false, true, cleanup)
