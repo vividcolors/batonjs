@@ -309,7 +309,7 @@ const presetOptions = {
       el.style.setProperty("--height", rect.height + "px")
     }
   }, 
-  popup: {
+  dropdown: {
     onstart: (el, name, newValue, oldValue) => {
       const rect = el.getBoundingClientRect()
       el.style.setProperty("--width", rect.width + "px")
