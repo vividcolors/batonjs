@@ -35,9 +35,21 @@ export const baton = (state, show, baseEl = null) => {
     return keys
   }
 
-  const dispatchElement = (decls, el) => {
+  const addLifecycleDeep = (el, value) => {
+    if (value) lifecycles.set(el, value)
+    for (let c = el.firstChild; c; c = c.nextSibling) {
+      if (c.nodeType === c.ELEMENT_NODE) addLifecycleDeep(c, value)
+    }
+    if (!value) lifecycles.set(el, value)
+  }
+
+  const dispatchElement = (decls, el, isFirstTime) => {
     const callbacks = []
     const box = {oldValue:null, newValue:null}
+
+    if (lifecycles.get(el) === true) {
+      isFirstTime = true
+    }
     
     // sync properties from declaration to element.
     for (let name in decls) {
@@ -46,9 +58,9 @@ export const baton = (state, show, baseEl = null) => {
         box.oldValue = null
         dispatchProperty(name, box, el, decls)
         // handles update observer
-        const observerName = "&" + name
-        if (decls[observerName] && box.oldValue !== box.newValue) {
-          callbacks.push([decls[observerName], el, name, box.newValue, box.oldValue, null])
+        const observer = isFirstTime ? decls["&&" + name] : (decls["&&" + name] || decls["&" + name])
+        if (observer && box.oldValue !== box.newValue) {
+          callbacks.push([observer, el, name, box.newValue, box.oldValue, null])
         }
       }
     }
@@ -58,12 +70,13 @@ export const baton = (state, show, baseEl = null) => {
       f(...callback)
     }
     // handles `mounted' callback
-    if ("&mounted" in decls) {
+    const mountedObserver = isFirstTime ? decls["&&mounted"] : (decls["&&mounted"] || decls["&mounted"])
+    if (mountedObserver) {
       // If the declaration is a function, the declaration cannot be referenced 
       // because the corresponding element does not exist when unmounted.
       // Therefore, `mounted' callback should be stored in the element so that 
       // it can be referenced even when there is no declaration.
-      el.batonLifecycle = decls["&mounted"]
+      el.batonLifecycle = mountedObserver
       if (lifecycles.get(el) === true) {
         el.batonLifecycle(el, "mounted", true, false, null)
         lifecycles.delete(el)
@@ -95,7 +108,7 @@ export const baton = (state, show, baseEl = null) => {
             continue
           }
           const subDecls = (typeof value == "function") ? value(subEl, i) : value
-          dispatchElement(subDecls, subEl)
+          dispatchElement(subDecls, subEl, isFirstTime)
           i++
         }
       }
@@ -140,7 +153,7 @@ export const baton = (state, show, baseEl = null) => {
             delete c.batonUnmounted
             const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
             el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
-            lifecycles.set(c, true)
+            addLifecycleDeep(c, true)
             keyToEl[ev.key] = c
             break
           }
@@ -152,7 +165,7 @@ export const baton = (state, show, baseEl = null) => {
           }
           case 'remove': {
             const c = keyToEl[ev.key]
-            lifecycles.set(c, false)
+            addLifecycleDeep(c, false)
             break
           }
         }
@@ -196,12 +209,12 @@ export const baton = (state, show, baseEl = null) => {
     }
   }
 
-  const reflect = () => {
+  const reflect = (isFirstTime) => {
     reflectionScheduled = false
     
     const decls0 = show(state)
     const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
-    dispatchElement(decls, baseEl)
+    dispatchElement(decls, baseEl, isFirstTime)
     
     // There may be elements without UI declarations. We process them here.
     lifecycles.forEach((lifecycle, el) => {
@@ -212,9 +225,9 @@ export const baton = (state, show, baseEl = null) => {
     lifecycles.clear()
   }
 
-  const scheduleReflection = () => {
+  const scheduleReflection = (isFirstTime) => {
     if (! reflectionScheduled) {
-      setTimeout(reflect)
+      setTimeout(reflect, 0, isFirstTime)
       reflectionScheduled = true
     }
   }
@@ -223,11 +236,11 @@ export const baton = (state, show, baseEl = null) => {
     const state0 = update(state)
     if ((state0 !== null && typeof state0 !== "undefined") && state0 !== state) {
       state = state0
-      scheduleReflection()
+      scheduleReflection(false)
     }
   }
 
-  scheduleReflection()
+  scheduleReflection(true)
 
   return withState
 }

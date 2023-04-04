@@ -6,45 +6,53 @@
   </head>
   <body>
     <style>
-      p.big {
+      span.big {
         font-size: 40px;
       }
-      p.transition-enter {
+      span.transition-enter {
         font-size: 1rem;
       }
-      p.transition-enter-active {
+      span.transition-enter-active {
         transition: font-size 0.2s linear;
         font-size: 40px;
       }
     </style>
-    <p>Animate on initialization of batonjs</p>
-    <div id="container"></div>
-    <button id="button">Add Element</button>
+    <div id="container">
+      <p data-baton-key="0"><span class="do">Do Animation</span><span class="no">No Animation</span></p>
+    </div>
+    <button class="button">Add Item</button>
     <template id="template">
-      <p>Animate on initialization of newly-created-element</p>
+      <p><span class="do">Do Animation</span><span class="no">No Animation</span></p>
     </template>
     <script type="module">
       import {baton, cssTransition, insert} from '../dist/baton.esm.js'
-      const state = {ppaps:[]}
+      const state = {items:["0"]}
       const transition = cssTransition("transition")
       const onAdd = (ev) => {
-        withState(state => ({ppaps: insert(state.ppaps.length, "" + Date.now(), state.ppaps)}))
+        const item = "" + Date.now()
+        withState(state => ({items: insert(state.items.length, item, state.items)}))
+      }
+      const logMounted = (el, name, newValue, oldValue, cleanup) => {
+        const action = (newValue) ? "mounted" : "unmounted"
+        console.log(`"${el.getAttribute("class")}" ${action}`)
       }
       function show(state) {
         return {
-          p: {
-            "class-big": true, 
-            "&class-big": transition
-          }, 
           "#container": {
-            batonChildKeys: state.ppaps, 
+            batonChildKeys: state.items, 
             batonChildTemplate: document.getElementById("template"), 
-            p: {
+            "span.do": {
               "class-big": true, 
-              "&class-big": transition
+              "&&class-big": transition, 
+              "&&mounted": logMounted
+            }, 
+            "span.no": {
+              "class-big": true, 
+              "&class-big": transition, 
+              "&&mounted": logMounted
             }
           }, 
-          "#button": {
+          ".button": {
             onclick: onAdd
           }
         }
