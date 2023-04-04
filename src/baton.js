@@ -37,33 +37,18 @@ export const baton = (state, show, baseEl = null) => {
 
   const dispatchElement = (decls, el) => {
     const callbacks = []
+    const box = {oldValue:null, newValue:null}
     
     // sync properties from declaration to element.
     for (let name in decls) {
-      let value = decls[name]
-      if (declType(name, value) === "property") {
-        value = dispatchProperty(name, value, el, decls)
+      if (declType(name, decls[name]) === "property") {
+        box.newValue = decls[name]
+        box.oldValue = null
+        dispatchProperty(name, box, el, decls)
         // handles update observer
         const observerName = "&" + name
-        if (decls[observerName]) {
-          if (! el.batonCache) {
-            el.batonCache = {}
-          }
-          if (name in el.batonCache) {
-            // TODO: we should obtain oldValue even if el.batonCache[name] is missing.
-            const oldValue = el.batonCache[name]
-            if (oldValue !== value) {
-              callbacks.push([decls[observerName], el, name, value, oldValue, null])
-            }
-          }
-          el.batonCache[name] = value
-        }
-        // The following properties are always stored on cache: on*
-        if (name[0] === 'o' && name[1] === 'n') {
-          if (! el.batonCache) {
-            el.batonCache = {}
-          }
-          el.batonCache[name] = value
+        if (decls[observerName] && box.oldValue !== box.newValue) {
+          callbacks.push([decls[observerName], el, name, box.newValue, box.oldValue, null])
         }
       }
     }
@@ -117,25 +102,27 @@ export const baton = (state, show, baseEl = null) => {
     }
   }
 
-  const dispatchProperty = (name, value, el, decls) => {
+  const dispatchProperty = (name, box, el, decls) => {
     if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
       const eventType = name.slice(2)
-      if (el.batonCache && el.batonCache[name]) {
-        if (el.batonCache[name] !== value) {
+      if (! el.batonEhcache) {
+        el.batonEhcache = {}
+      }
+      if (el.batonEhcache[name]) {
+        box.oldValue = el.batonEhcache[name]
+        if (box.oldValue !== box.newValue) {
           // handler changed
-          el.removeEventListener(eventType, el.batonEhcache[name])
-          el.addEventListener(eventType, value)
+          el.removeEventListener(eventType, box.oldValue)
+          el.addEventListener(eventType, box.newValue)
         }
       } else {
         // new handler
-        el.addEventListener(eventType, value)
+        el.addEventListener(eventType, box.newValue)
+        box.oldValue = null
       }
     }
-    else if (name[0] == '&') {  // case: update handler
-      // we just ignore it
-    }
     else if (name === 'batonChildKeys') {  // case: batonChildKeys special attribute
-      const newKeys = value
+      const newKeys = box.newValue
       const keyToEl = {}
       for (let c of el.childNodes) {
         if (c.nodeType === c.ELEMENT_NODE && c.hasAttribute('data-baton-key') && c.getAttribute('data-baton-key')) {
@@ -170,37 +157,43 @@ export const baton = (state, show, baseEl = null) => {
           }
         }
       }
+      box.oldValue = el.batonChidKeys
       el.batonChildKeys = newKeys
     }
     else if (name === "batonChildTemplate") {  // case: batonChildTemplate special
-      el.batonChildTemplate = value
+      box.oldValue = el.batonChildTemplate
+      el.batonChildTemplate = box.newValue
     }
     else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
-      value = "" + value
-      if (value === "") el.removeAttribute(name) 
-      else el.setAttribute(name, value)
+      box.newValue = "" + box.newValue
+      box.oldValue = el.getAttribute(name)
+      if (box.newValue === "") el.removeAttribute(name) 
+      else el.setAttribute(name, box.newValue)
     }
     else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
       const cname = name.slice(6)
-      if (value) el.classList.add(cname)
+      box.oldValue = el.classList.contains(cname)
+      if (box.newValue) el.classList.add(cname)
       else el.classList.remove(cname)
     }
     else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
       const sname = name.slice(6)
-      value = "" + value
-      if (value === "" || value === null) el.style.removeProperty(sname)
-      else el.style.setProperty(sname, value)
+      box.newValue = "" + box.newValue
+      box.oldValue = el.style.getPropertyValue(sname)
+      if (box.newValue === "" || box.newValue === null) el.style.removeProperty(sname)
+      else el.style.setProperty(sname, box.newValue)
     }
     else {  // otherwise: common attributes
       if (name in el) {
-        value = value == null ? "" : value
-        el[name] = value
+        box.newValue = (box.newValue == null) ? "" : box.newValue
+        box.oldValue = el[name]
+        el[name] = box.newValue
       } else {
-        if (value != null && value !== false) el.setAttribute(name, value)
+        box.oldValue = el.getAttribute(name)
+        if (box.newValue != null && box.newValue !== false) el.setAttribute(name, box.newValue)
         else el.removeAttribute(name)
       }
     }
-    return value
   }
 
   const reflect = () => {
