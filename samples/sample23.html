@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSS Transition at initialization</title>
+  </head>
+  <body>
+    <style>
+      p.big {
+        font-size: 40px;
+      }
+      p.transition-enter {
+        font-size: 1rem;
+      }
+      p.transition-enter-active {
+        transition: font-size 0.2s linear;
+        font-size: 40px;
+      }
+    </style>
+    <p>Pen, Pineapple, Apple, Pen</p>
+    <div id="container"></div>
+    <button id="button">Add PPAP</button>
+    <template id="template">
+      <p>PPAP</p>
+    </template>
+    <script type="module">
+      import {baton, cssTransition, insert} from '../dist/baton.esm.js'
+      const state = {ppaps:[]}
+      const transition = cssTransition("transition")
+      const onAdd = (ev) => {
+        withState(state => ({ppaps: insert(state.ppaps.length, "" + Date.now(), state.ppaps)}))
+      }
+      function show(state) {
+        return {
+          p: {
+            "class-big": true, 
+            "&class-big": transition
+          }, 
+          "#container": {
+            batonChildKeys: state.ppaps, 
+            batonChildTemplate: document.getElementById("template"), 
+            p: {
+              "class-big": true, 
+              "&class-big": transition
+            }
+          }, 
+          "#button": {
+            onclick: onAdd
+          }
+        }
+      }
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
