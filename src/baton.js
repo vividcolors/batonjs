@@ -58,8 +58,8 @@ export const baton = (state, show, baseEl = null) => {
           }
           el.batonCache[name] = value
         }
-        // The following properties are always stored on cache: on*, childKeys, childTemplate
-        if ((name[0] === 'o' && name[1] === 'n') || name === "childKeys" || name === "childTemplate") {
+        // The following properties are always stored on cache: on*
+        if (name[0] === 'o' && name[1] === 'n') {
           if (! el.batonCache) {
             el.batonCache = {}
           }
@@ -134,7 +134,7 @@ export const baton = (state, show, baseEl = null) => {
     else if (name[0] == '&') {  // case: update handler
       // we just ignore it
     }
-    else if (name === 'childKeys') {  // case: childKeys special attribute
+    else if (name === 'batonChildKeys') {  // case: batonChildKeys special attribute
       const newKeys = value
       const keyToEl = {}
       for (let c of el.childNodes) {
@@ -142,11 +142,11 @@ export const baton = (state, show, baseEl = null) => {
           keyToEl[c.getAttribute('data-baton-key')] = c
         }
       }
-      const oldKeys = (el.batonCache && el.batonCache.childKeys) ? el.batonCache.childKeys : collectKeys(el)
+      const oldKeys = el.batonChildKeys ? el.batonChildKeys : collectKeys(el)
       for (let ev of diff(newKeys, oldKeys)) {
         switch (ev.type) {
           case 'insert': {
-            const template = decls["childTemplate"]
+            const template = decls.batonChildTemplate || el.batonChildTemplate
             const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
                     : template.cloneNode(true)
             c.setAttribute('data-baton-key', ev.key)
@@ -170,9 +170,10 @@ export const baton = (state, show, baseEl = null) => {
           }
         }
       }
+      el.batonChildKeys = newKeys
     }
-    else if (name === "childTemplate") {  // case: childTemplate special
-
+    else if (name === "batonChildTemplate") {  // case: batonChildTemplate special
+      el.batonChildTemplate = value
     }
     else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
       value = "" + value
