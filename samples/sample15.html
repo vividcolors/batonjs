@@ -23,17 +23,17 @@
         height: auto;
       }
       details.transition-enter p {
-        transition: height 0.2s linear;
         height: 0;
       }
       details.transition-enter-active p {
-        height: var(--height);
-      }
-      details.transition-exit p {
         transition: height 0.2s linear;
         height: var(--height);
       }
+      details.transition-exit p {
+        height: var(--height);
+      }
       details.transition-exit-active p {
+        transition: height 0.2s linear;
         height: 0;
       }
     </style>

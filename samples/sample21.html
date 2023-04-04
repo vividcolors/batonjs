@@ -12,17 +12,17 @@
         overflow: hidden;
       }
       .li.transition-enter {
-        transition: height 0.2s linear;
         height: 0;
       }
       .li.transition-enter-active {
-        height: var(--height);
-      }
-      .li.transition-exit {
         transition: height 0.2s linear;
         height: var(--height);
       }
+      .li.transition-exit {
+        height: var(--height);
+      }
       .li.transition-exit-active {
+        transition: height 0.2s linear;
         height: 0;
       }
     </style>
