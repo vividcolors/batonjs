@@ -44,7 +44,7 @@
       const show = (state) => ({
         ul: {
           childKeys: state.items, 
-          childTemplate: "#template", 
+          childTemplate: template, 
           li: (el, i) => ({
             "&mounted": fade, 
             "span": {

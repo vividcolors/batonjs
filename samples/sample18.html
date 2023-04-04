@@ -26,7 +26,7 @@
       const show = (state) => ({
         ul: {
           childKeys: state.items, 
-          childTemplate: "#template", 
+          childTemplate: document.getElementById('template'), 
           li: (el, i) => ({
             "span": {
               innerText: state.items[i]

@@ -146,8 +146,7 @@ export const baton = (state, show, baseEl = null) => {
       for (let ev of diff(newKeys, oldKeys)) {
         switch (ev.type) {
           case 'insert': {
-            const selector = decls["childTemplate"]
-            const template = baseEl.querySelector(selector)
+            const template = decls["childTemplate"]
             const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
                     : template.cloneNode(true)
             c.setAttribute('data-baton-key', ev.key)

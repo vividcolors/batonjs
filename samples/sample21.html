@@ -82,7 +82,7 @@
         return {
           "#todos": {
             childKeys: state.todos.map(todo => ""+todo.id), 
-            childTemplate: "#template", 
+            childTemplate: document.getElementById('template'), 
             li: (el, i) => {
               const todo = state.todos[i]
               return {
