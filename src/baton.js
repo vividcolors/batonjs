@@ -1,4 +1,8 @@
 
+const LC_MOUNTED_DIRECTLY = "MD"
+const LC_MOUNTED_INDIRECTLY = "MI"
+const LC_UNMOUNTED_DIRECTLY = "UD"
+const LC_UNMOUNTED_INDIRECTLY = "UI"
 
 export const baton = (state, show, baseEl = null) => {
   const lifecycles = new Map()
@@ -35,19 +39,20 @@ export const baton = (state, show, baseEl = null) => {
     return keys
   }
 
-  const addLifecycleDeep = (el, value) => {
-    if (value) lifecycles.set(el, value)
+  const addLifecycleDeep = (el, mounted, directly = true) => {
+    const value = (mounted ? "M" : "U") + (directly ? "D" : "I")
+    if (mounted) lifecycles.set(el, value)
     for (let c = el.firstChild; c; c = c.nextSibling) {
-      if (c.nodeType === c.ELEMENT_NODE) addLifecycleDeep(c, value)
+      if (c.nodeType === c.ELEMENT_NODE) addLifecycleDeep(c, mounted, false)
     }
-    if (!value) lifecycles.set(el, value)
+    if (!mounted) lifecycles.set(el, value)
   }
 
   const dispatchElement = (decls, el, isFirstTime) => {
     const callbacks = []
     const box = {oldValue:null, newValue:null}
 
-    if (lifecycles.get(el) === true) {
+    if (lifecycles.get(el)?.[0] === "M") {
       isFirstTime = true
     }
     
@@ -77,7 +82,7 @@ export const baton = (state, show, baseEl = null) => {
       // Therefore, `mounted' callback should be stored in the element so that 
       // it can be referenced even when there is no declaration.
       el.batonLifecycle = mountedObserver
-      if (lifecycles.get(el) === true) {
+      if (lifecycles.get(el)?.[0] === "M") {
         el.batonLifecycle(el, "mounted", true, false, null)
         lifecycles.delete(el)
       }
@@ -92,11 +97,12 @@ export const baton = (state, show, baseEl = null) => {
           if (subEl.batonUnmounted) {
             // subEl has been already unmounted. Just ignore.
             continue
-          } else if (lifecycles.get(subEl) === false) {
+          } else if (lifecycles.get(subEl)?.[0] === "U") {
             // subEl is just being unmounted. Unmount now.
+            const lifecycle = lifecycles.get(subEl)
             subEl.batonUnmounted = true
             const cleanup = () => {
-              subEl.parentNode.removeChild(subEl)
+              if (lifecycle === LC_UNMOUNTED_DIRECTLY) subEl.parentNode.removeChild(subEl)
               delete subEl.batonUnmounted
             }
             if (subEl.batonLifecycle) {
@@ -218,7 +224,7 @@ export const baton = (state, show, baseEl = null) => {
     
     // There may be elements without UI declarations. We process them here.
     lifecycles.forEach((lifecycle, el) => {
-      if (! lifecycle) {
+      if (lifecycle === LC_UNMOUNTED_DIRECTLY) {
         el.parentNode.removeChild(el)
       }
     })
