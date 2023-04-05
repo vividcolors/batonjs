@@ -4,7 +4,7 @@ export default [
   {
     input: 'src/baton.js', 
     output: {
-      file: 'dist/baton.umd.js', 
+      file: 'asset/baton.umd.js', 
       format: 'umd', 
       name: "batonjs", 
       sourcemap: true
@@ -13,7 +13,7 @@ export default [
   {
     input: 'src/baton.js', 
     output: {
-      file: 'dist/baton.umd.min.js', 
+      file: 'asset/baton.umd.min.js', 
       format: 'umd', 
       name: "batonjs", 
       sourcemap: true, 
@@ -23,7 +23,7 @@ export default [
   {
     input: 'src/baton.js', 
     output: {
-      file: 'dist/baton.esm.js', 
+      file: 'asset/baton.esm.js', 
       format: 'es', 
       sourcemap: true
     }
@@ -31,7 +31,7 @@ export default [
   {
     input: 'src/baton.js', 
     output: {
-      file: 'dist/baton.esm.min.js', 
+      file: 'asset/baton.esm.min.js', 
       format: 'es', 
       sourcemap: true, 
       plugins: [terser()]
@@ -40,7 +40,7 @@ export default [
   {
     input: 'src/baton.js', 
     output: {
-      file: 'dist/baton.cjs.js', 
+      file: 'asset/baton.cjs.js', 
       format: 'cjs', 
       sourcemap: true
     }
@@ -48,7 +48,7 @@ export default [
   {
     input: 'src/baton.js', 
     output: {
-      file: 'dist/baton.cjs.min.js', 
+      file: 'asset/baton.cjs.min.js', 
       format: 'cjs', 
       sourcemap: true, 
       plugins: [terser()]

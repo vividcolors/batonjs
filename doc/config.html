@@ -14,14 +14,14 @@
     </template>
     <template class="header ja">
       <ul>
-        <li><a href="/"><strong>batonjs</strong></a></li>
-        <li>Documentation</li>
+        <li class="show-on-mobile"><a id="open-menu" class="secondary"><span class="material-icons">menu</span></a></li>
+        <li><a href="/" class="contrast"><strong>batonjs</strong></a></li>
       </ul>
       <ul>
         <li><a href="#" target="_blank"><img src="/asset/github-mark.png" alt="GitHub" /></a></li>
         <li>
           <details role="list" dir="rtl">
-            <summary aria-haspopup="listbox" role="link"><span class="material-icons">translate</span></summary>
+            <summary aria-haspopup="listbox" role="link" class="secondary"><span class="material-icons">translate</span></summary>
             <ul role="listbox">
               <li><a>English</a></li>
               <li><a>日本語</a></li>
@@ -31,14 +31,20 @@
       </ul>
     </template>
     <template class="sidebar ja en">
-      <nav class="closed-on-mobile">
-        <ol>
-          <li><a href="baton.html" class="secondary">batonコア</a></li>
-          <li><a href="csstransition.html" class="secondary">CSSトランジション</a></li>
-          <li><a href="data.html" class="secondary">データ処理</a></li>
-          <li><a href="event.html" class="secondary">イベントフィルター</a></li>
-          <li><a</li>
-        </ol>
+      <nav>
+        <a id="close-menu" class="show-on-mobile secondary"><span class="material-icons">close</span></a>
+        <ul>
+          <li>
+            <div>ドキュメント</div>
+            <ul>
+              <li><a href="baton.html" class="secondary">batonコア</a></li>
+              <li><a href="csstransition.html" class="secondary">CSSトランジション</a></li>
+              <li><a href="data.html" class="secondary">データ処理</a></li>
+              <li><a href="event.html" class="secondary">イベントフィルター</a></li>
+            </ul>
+          </li>
+          <li><a href="samples/" class="secondary">ライブサンプル</a></li>
+        </ul>
       </nav>
     </template>
     <template class="toc ja">
@@ -52,6 +58,34 @@
       <script src="/asset/prism.js"></script>
       <p><small>&copy; 2023 <a href="https://www.vividcolors.co.jp/" target="_blank">vividcolors, inc.</a><br />
       This beautiful site is styled by <a href="https://picocss.com/" target="_blank">Pico.css</a></small></p>
+      <div id="overlay"></div>
+      <script type="module">
+        import {baton, cssTransition} from '/asset/baton.esm.js'
+        const transition = cssTransition("transition")
+        const openDrawer = (ev) => {
+          withState(state => ({...state, drawerOpen:true}))
+        }
+        const closeDrawer = (ev) => {
+          withState(state => ({...state, drawerOpen:false}))
+        }
+        const state = {drawerOpen:false}
+        const show = (state) => ({
+          "#open-menu": {
+            onclick: openDrawer
+          }, 
+          "#close-menu": {
+            onclick: closeDrawer
+          }, 
+          "#sidebar": {
+            "class-is-open": state.drawerOpen
+          }, 
+          "#overlay": {
+            "class-is-open": state.drawerOpen, 
+            onclick: closeDrawer
+          }
+        })
+        const withState = baton(state, show)
+      </script>
     </template>
   </body>
 </html>

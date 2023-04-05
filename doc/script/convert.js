@@ -3,6 +3,7 @@ import { readFile, writeFile, opendir, copyFile, stat, mkdir } from 'node:fs/pro
 import { JSDOM } from 'jsdom'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import cpx from 'cpx'
 
 const show = (config) => {
   return {
@@ -89,5 +90,25 @@ const run = async () => {
   await runDir("ja", config, inDirPath, outDirPath)
 }
 
+const copySampleIndex = () => {
+  const srcPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../samples/index.html")
+  const dstPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../src/samples/")
+  cpx.copySync(srcPath, dstPath)
+}
 
+const copySamples = () => {
+  const srcPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../samples/sample*")
+  const dstPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../dist/samples")
+  cpx.copySync(srcPath, dstPath)
+}
+
+const copyBaton = () => {
+  const srcPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../dist/*")
+  const dstPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../dist/asset")
+  cpx.copySync(srcPath, dstPath)
+}
+
+copySampleIndex()
 await run()
+copySamples()
+copyBaton()

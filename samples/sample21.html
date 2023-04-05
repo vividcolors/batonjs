@@ -40,7 +40,7 @@
     </template>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script type="module">
-      import {baton, cssTransition, insert, remove, update} from '../dist/baton.esm.js'
+      import {baton, cssTransition, insert, remove, update} from '../asset/baton.esm.js'
       const state = {todos:[], form:{what:'', when:''}, nextId:1}
       const onDone = (ev) => {
         const i = +(ev.target.parentNode.dataset.index)
