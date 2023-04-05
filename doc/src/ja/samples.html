@@ -3,7 +3,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Live Samples</title>
-    <base href="..">
   </head>
   <body class="force-mobile-layout">
     <nav class="container-fluid" id="header"></nav>
@@ -76,7 +75,7 @@
         load(no)
       }
       const load = (no) => {
-        const url = `samples/sample${no}.html`
+        const url = `../samples/sample${no}.html`
         result.src = url
         fetch(url)
         .then(res => res.text())

@@ -4,6 +4,7 @@
   </head>
   <body>
     <template class="site-title ja">導入しやすく協調的な、Web向け宣言型UIフレームワーク</template>
+    <template class="site-title en">Declarative UI framework for Web that is easy to introduce and collaborative</template>
     <template class="head ja en">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/asset/pico.css" />
@@ -12,7 +13,7 @@
       <link rel="stylesheet" href="/asset/own.css" />
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </template>
-    <template class="header ja">
+    <template class="header ja en">
       <ul>
         <li class="show-on-mobile"><a id="open-menu" class="secondary"><span class="material-icons">menu</span></a></li>
         <li><a href="/" class="contrast"><strong>batonjs</strong></a></li>
@@ -30,7 +31,7 @@
         </li>
       </ul>
     </template>
-    <template class="sidebar ja en">
+    <template class="sidebar ja">
       <nav>
         <a id="close-menu" class="show-on-mobile secondary"><span class="material-icons">close</span></a>
         <ul>
@@ -43,13 +44,36 @@
               <li><a href="event.html" class="secondary">イベントフィルター</a></li>
             </ul>
           </li>
-          <li><a href="samples/" class="secondary">ライブサンプル</a></li>
+          <li><a href="samples.html" class="secondary">ライブサンプル</a></li>
+        </ul>
+      </nav>
+    </template>
+    <template class="sidebar en">
+      <nav>
+        <a id="close-menu" class="show-on-mobile secondary"><span class="material-icons">close</span></a>
+        <ul>
+          <li>
+            <div>Document</div>
+            <ul>
+              <li><a href="baton.html" class="secondary">baton core</a></li>
+              <li><a href="csstransition.html" class="secondary">CSS transition</a></li>
+              <li><a href="data.html" class="secondary">Data processing</a></li>
+              <li><a href="event.html" class="secondary">Event filter</a></li>
+            </ul>
+          </li>
+          <li><a href="samples.html" class="secondary">Live samples</a></li>
         </ul>
       </nav>
     </template>
     <template class="toc ja">
       <details>
         <summary>もくじ</summary>
+        <ol class="toc-entries"></ol>
+      </details>
+    </template>
+    <template class="toc en">
+      <details>
+        <summary>TOC</summary>
         <ol class="toc-entries"></ol>
       </details>
     </template>
