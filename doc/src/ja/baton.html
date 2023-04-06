@@ -1,0 +1,409 @@
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>batonコア</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>batonコア</h1>
+          <h4>batonjsのコア部分であるbaton関数とその周辺について説明します。</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="baton">baton</h2>
+
+          <p>batonjsを起動します。起動したbatonjsは単一のページ状態を管理します。</p>
+
+          <h5>例</h5>
+          <pre class="line-numbers"><code class="language-javascript">const withState = baton({count:0}, show, document.getElementById('root'))</code></pre>
+
+          <h5>パラメーター</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col">デフォルト</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>state</td>
+                  <td>any</td>
+                  <td>省略不可</td>
+                  <td>初期のページ状態。<code>null</code>と<code>undefined</code>は指定できません。</td>
+                </tr>
+                <tr>
+                  <td>show</td>
+                  <td>関数</td>
+                  <td>省略不可</td>
+                  <td>ページ状態をUI宣言に変換する関数。後述</td>
+                </tr>
+                <tr>
+                  <td>baseEl</td>
+                  <td>DOM要素</td>
+                  <td><code>document.documentElement</code>（※）</td>
+                  <td>UI宣言ではCSSセレクターを使ってDOM要素を抽出しますが、その抽出の起点とするDOM要素。省略した場合はHTML文書全体になります。<br />
+                  ※batonjsをNode.js上で動かす場合は省略できません。</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>返却値</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>withState</td>
+                  <td>関数</td>
+                  <td>ページ状態を更新する関数を受け取り、その関数を呼び出してその結果であるページ状態をページに反映させます。後述</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="state">ページ状態とwithStateによる更新</h2>
+
+          <p>ページ状態は1つのjavascriptの値で表現します。値は何でも構いませんが、<code>null</code>と<code>undefined</code>は使えません。<br />
+          ページ状態を変更するときは<code>withState</code>を使ってください。<br />
+          batonjsはページ状態を一切変更しません。</p>
+
+          <p><code>withState</code>は多くの場合、イベントハンドラーの中で使います。<br />
+          ユーザーがUIを操作してイベントが発生し、そのハンドラーの中で<code>withState</code>を使ってページ状態を更新する、という流れです。</p>
+          
+          <p><code>withState</code>に渡すコールバック関数は、ページ状態を更新して返却します。<br />
+          このとき、ページ状態を更新するには、元の値とは別の値（<code>===</code>の意味で）を返却してください。batonjsは<code>===</code>でページ状態が変わったかどうかを判断します。つまり、<code>state.count++</code>のような代入（破壊的更新）を使うことはできないということです。<br />
+          また、返却値が<code>null</code>か<code>undefined</code>だった場合も、ページ状態は変わっていないとbatonjsは判断します。</p>
+          
+          <p>batonjsを1つのページ内で複数起動する場合、<code>withState</code>は起動するごとに別の値です。<br />
+          <code>withState</code>batonjsを起動する関数<code>baton</code>の返却値として取得できます。</p>
+
+          <h5>例</h5>
+          <pre class="line-numbers"><code class="language-javascript">myButton.addEventListener(ev => {
+  withState(state => ({count: state.count + 1}))
+})</code></pre>
+
+          <h5>パラメーター</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col">デフォルト</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>update</td>
+                  <td>関数</td>
+                  <td>省略不可</td>
+                  <td>ページ状態を受け取り、更新された新しいページ状態を返却する関数。この関数が<code>null</code>か<code>undefined</code>を返却した場合、ページ状態に変化は無いものと解釈されます。</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>返却値</h5>
+          <p>なし</p>
+        </section>
+
+        <section>
+          <h2 id="ui-decl">showとUI宣言</h2>
+          
+          <p>batonjsは、ページ状態が更新されるとshow関数を呼び出します。<br />
+          show関数はページ状態をUI宣言に変換する、ユーザー定義の関数です。<br />
+          show関数は、起動パラメーターとしてbatonjsに渡します。</p>
+
+          <p>UI宣言とは、UIの状態を表現する単一の値です。主として、ページ状態に応じてどのUIがどのように変わるのかを表現しています。<br />
+          UI宣言には基本2つの構文があります。</p>
+
+          <dl>
+            <dt>要素宣言</dt>
+            <dd>DOM要素の宣言です。左辺がCSSセレクターで、右辺は他の宣言をまとめたブロック（オブジェクト）です。左辺のCSSセレクターで抽出されたDOM要素に対して右辺の宣言群を適用しましょう、という意味合いです。</dd>
+            <dd>batonjsは内部で<code>querySelectorAll</code>を使っていますが、<a href="https://developer.mozilla.org/ja/docs/Web/API/Document_object_model/Locating_DOM_elements_using_selectors" target="_blank">これの仕様はCSSのとは少し違う</a>ので注意してください。</dd>
+            <dd>先ほど「show関数はUI宣言を返却します」と述べましたが、実はこれは厳密ではありませんでした。厳密に言うと「show関数は要素宣言の右辺を返却します」となります。では左辺は何なのかと言うと、baton関数への第3引数として渡されるDOM要素です。</dd>
+            <dt>プロパティ宣言</dt>
+            <dd>DOM要素のプロパティや属性の宣言です。左辺がプロパティ名で、右辺はプロパティの値です。<br />
+            DOM要素のどのプロパティや属性も書けて、<code>data-my-attr</code>のようなdata-*属性も書けます。ただし、読み取り専用のプロパティを書くと、後にbatonjsが更新しようとしたときにエラーが発生するでしょう。</dd>
+          </dl>
+          
+          <p>下の例では2～4行目が要素宣言、3行目がプロパティ宣言です。1行目から始まるブロックは要素宣言の右辺です。</p>
+
+          <h5>例</h5>
+          <pre class="line-numbers"><code class="language-javascript">const show = (state) => ({
+  "#counter": {
+    innerText: state.count
+  }
+})
+const withState = baton(state, show)</code></pre>
+
+          <h5>パラメーター</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col">デフォルト</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>state</td>
+                  <td>any</td>
+                  <td>省略不可</td>
+                  <td>最新のページ状態。</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>返却値</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>uiDeclaration</td>
+                  <td>object</td>
+                  <td>UI宣言（厳密には要素宣言の右辺）</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="update-observer">プロパティの更新監視</h2>
+
+          <p>DOM要素のプロパティ値が変わったときにコールバック関数を呼んでもらうことができます。batonjsではこれを<strong>更新監視</strong>と呼んでいます。<br />
+          更新監視はUI宣言の中に書きます。監視対象とするプロパティの名前の前に"&"を付けたものを左辺とし、右辺にはコールバック関数を書きます。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const handleModalOpen = (element, propertyName, newValue, oldValue, cleanup) => {...}
+const show = (state) => ({
+  "class-is-open": state.modalOpen, 
+  "&class-is-open": handleModalOpen
+})</code></pre>
+
+          <h5>パラメーター</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col">デフォルト</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>element</td>
+                  <td>DOM要素</td>
+                  <td>省略不可</td>
+                  <td>プロパティが変わったDOM要素</td>
+                </tr>
+                <tr>
+                  <td>propertyName</td>
+                  <td>文字列</td>
+                  <td>省略不可</td>
+                  <td>変わったプロパティの名前</td>
+                </tr>
+                <tr>
+                  <td>newValue</td>
+                  <td>any</td>
+                  <td>省略不可</td>
+                  <td>変更後のプロパティの値</td>
+                </tr>
+                <tr>
+                  <td>oldValue</td>
+                  <td>any</td>
+                  <td>省略不可</td>
+                  <td>変更前のプロパティの値</td>
+                </tr>
+                <tr>
+                  <td>cleanup</td>
+                  <td>関数|null</td>
+                  <td>省略不可</td>
+                  <td>コールバックの実行後にbatonjsがクリーンアップ処理を必要としている場合に、そのクリーンアップ処理が関数として渡されます。nullでない値を受け取った場合には、対象のDOM要素を使い終わった後に呼び出してください。cleanup関数にパラメーターや返却値はありません。</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>返却値</h5>
+          <p>なし</p>
+
+          <p>「ページ状態を自分で変更してそれを自分でUIに反映したのに、その変更を教えてもらう？それに何の価値があるの？」と思った方もいるかもしれません。<br />
+          実は、これには大きな価値があります。それは、プログラムコードの分割です。</p>
+
+          <p>更新監視はプロパティ値の変化をトリガーとして、アニメーションを起動したり、bootstrapなど外部ライブラリの部品を起動したり、といった処理に使えます。<br />
+          こういった処理は、ページ状態を管理するという視点からみると、脇道のように余計なものです。<br />
+          こういった脇道的な処理をページ状態の管理から分離することを可能にするのが、更新監視の存在意義です。</p>
+        </section>
+
+        <section>
+          <h2 id="strong-update-observer">プロパティの強い更新監視</h2>
+
+          <p>前章で説明した更新監視は、実は典型的な話にすぎません。典型的というのは「ページ状態が変わり、それに伴いUI宣言が変わって、DOM要素のプロパティ値に反映され、その変更を通知してもらう」というパターンのことです。<br />
+          batonjsには、DOM要素のプロパティ値が変わる場面が他にも2つあります。</p>
+
+          <p>1つ目はbatonjsが起動したときです。<br />
+          batonjsが起動するとすぐに、初期のページ状態を元にUI宣言が作られ、それが既にあるHTMLページに対して反映されます。<br />
+          このとき、既存のHTMLに由来するプロパティとUI宣言に由来するプロパティの間に差異があった場合、プロパティ値が更新されることになります。</p>
+
+          <p>2つ目はbatonjsがDOM要素を作ったときです。<br />
+          DOM要素の作成については後述しますが、batonjsはテンプレートを元にDOM要素を作ることがあります。<br />
+          このとき、テンプレートに由来するプロパティとUI宣言に由来するプロパティの間に差異があった場合、やはりプロパティ値は変更されることになります。</p>
+
+          <p>上記2つは、<strong>ページ状態やUI宣言が変わったわけではないのにプロパティ値が変わる</strong>という意味でやや特殊です。batonjsが初めて出会うDOM要素なので、batonjsのルールに従ってない可能性があるわけです。</p>
+
+          <p>batonjsでは、このような場面でも更新監視ができるようになっています。<br />
+          どうするかと言うと、UI宣言に更新監視を宣言するときに、"&"の代わりに"&&"を使います。<br />
+          "&"の更新監視はページ状態の変化に由来するプロパティ値変化だけを監視します。一方、"&&"の更新監視はそれに加え、ページ状態の変化が直接関係していないプロパティ値変化も監視します。<br />
+          batonjsでは、"&&"による更新監視を「強い更新監視」と呼んでいます。</p>
+
+          <p>強い更新監視を使う場面はそれほど多くないと筆者は考えています。ただ、たとえばページの読み込みと同時にアニメーションを開始したいような場面では役に立つでしょう。<br />
+          下の例では、ページの読み込みと同時にポップアップがアニメーション付きで起動するように指定しています。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">"#startup-popup": {
+  "class-is-open": true, 
+  "&&class-is-open": myTransition
+}</code></pre>
+        </section>
+
+        <section>
+          <h2 id="ui-decl-more">UI宣言のその他の機能</h2>
+
+          <p>UI宣言にはbatonjsをより有用にするための様々な機能があります。このセクションではそれらの機能を紹介します。</p>
+
+          <h5>イベントハンドラー</h5>
+          <p><code>addEventListener</code>を使う代わりに、UI宣言の中でイベントハンドラを設定することができます。プロパティ名は<code>onclick</code>、<code>onchange</code>など、イベントタイプの前にonを添えてください。<br />
+          そのプロパティ名にも関わらず、batonjsは内部的には<code>addEventLister</code>、<code>removeEventListener</code>を使います。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">"#button": {
+  onclick: countUp
+}</code></pre>
+
+          <p>注意<br />
+          UI宣言の中に関数式（<code>function () {...}</code>など）を書くと、show関数が呼ばれる度に関数オブジェクトが作成されることになります。これは大抵の場合は非効率ですので、イベントハンドラ関数はなるべくshow関数の外で定義するのが良いです。</p>
+
+          <h5>UI宣言を入れ子にする</h5>
+
+          <p>UI宣言は入れ子にできます。<br />
+          その場合、仮に外側の宣言を親、内側を子と呼ぶことにすると、親のCSSセレクターで抽出されたDOM要素を起点として、子のCSSセレクターが使われるようになります。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">".parent": {
+  ".child": {...}, 
+  "data-index": ...
+}</code></pre>
+
+          <p>上の例の2行目では、CSSセレクター<code>.parent .child</code>と同じDOM要素が抽出されます。<br />
+          また、入れ子になった要素の宣言（<code>.child</code>）と、プロパティの宣言（<code>data-index</code>）を並べて書ける点にも注目してください。</p>
+
+          <h5>UI宣言の中でDOM要素を使う</h5>
+
+          <p>要素宣言の右辺（左辺のCSSセレクターに対応するブロックの部分）を関数にすることができます。<br />
+          ここを関数にすると、CSSセレクターで抽出された各DOM要素を引数としてその関数が呼び出されるようになります。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  "option": (element, index) => ({
+    selected: state.selection === element.value
+  })
+}</code></pre>
+
+          <h5>class-*プロパティ、style-*プロパティ</h5>
+
+          <p>プロパティ宣言にはclass属性とstyle属性のための便利な記法があります。</p>
+
+          <p>プロパティ名の先頭がclass-の場合、これは単一のCSSクラスの指定と解釈されます。プロパティの値は真偽値です。<br />
+          たとえば、<code>"class-is-open": true</code>という宣言は、感覚的には<code>classList.add("is-open")</code>と同じです。逆に、<code>"class-is-open": false</code>とすると<code>classList.remove("is-open")</code>になります。</p>
+
+          <p>同様に、プロパティ名の先頭がstyle-の場合、これは単一のCSSスタイルの指定と解釈されます。プロパティの値は文字列です。<br />
+          たとえば、<code>"style-font-size": "16px"</code>という宣言は、感覚的にはstyle属性の中に<code>font-size: 16px;</code>と書くのと同じです。</p>
+
+          <p>注意</p>
+
+          <ul>
+            <li>style-*プロパティの値に数値を設定しないよう注意してください。悪い例：<code>"style-font-size": 16</code>。これは誤作動の原因になるかもしれません</li>
+            <li>UI宣言内でclass-*とclassを併用した場合、style-*とstyleを併用した場合の挙動は不明です。そのような使い方はしないでください。HTML上のclass属性やstyle属性と、UI宣言内のclass-*プロパティやstyle-*プロパティを併用するのは構いません。</li>
+          </ul>
+
+          <h5>CSSトランジションの起動</h5>
+
+          <p>更新監視の仕組みを使ってCSSトランジションを起動することができます。詳細は<a href="csstransition.html">CSSトランジションページ</a>を参照してください。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  "class-is-open": cssTransition("transition", "size")
+}</code></pre>
+
+          <h5>DOM要素の追加と削除</h5>
+
+          <p>batonjsは明示的に指示された場合にはDOM要素の追加と削除を行うこともできます。そうするには、どのDOM要素の子要素を管理するかを、batonjsに指示します。<br />
+          ここからの説明では、追加および削除されるDOM要素を「子」、その親のDOM要素を「親」と呼ぶことにします。</p>
+
+          <p>子要素の追加と削除は、親要素のUI宣言に<code>batonChildKeys</code>プロパティと<code>batonChildTemplate</code>プロパティを定義することで指示します。<br />
+          <code>batonChildKeys</code>は<strong>子要素のキーの配列</strong>で、子要素の存否と並び順を表します。<code>batonChildTemplate</code>は<strong>子要素を新たに作る場合に使われるテンプレートとなる要素</strong>です。<br />
+          キーは子を特定するための文字列で、不変でなければならず、兄弟の中で重複があってもなりません。batonjsは各キーを子要素の<strong>data-baton-key属性</strong>に保存します。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  batonChildKeys: state.todos.map(todo => todo.id), 
+  batonChildTemplate: document.getElementById('todo-template')
+}</code></pre>
+
+          <p>batonjsはキーの配列から子要素の正しい順番を認識し、DOM上でも子がその通りに並ぶように追加・削除と並べ替えを行います。</p>
+
+          <p>注意<br />
+          HTML上にあらかじめ子が記述されている場合は、<code>data-baton-key</code>属性を必ず書くようにしてください</p>
+
+          <h5>mountedプロパティとライフサイクルの更新監視</h5>
+
+          <p>前章で説明したDOM要素の追加と削除ですが、更新監視の仕組みを使って子要素のライフサイクルの変化を監視できます。<br />
+          そうするには、子要素の<strong>mountedプロパティ</strong>に強い更新監視を仕掛けてください。<br />
+          下の例では、子要素の追加・削除のタイミングでCSSトランジションを起動しています。</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  "&&mounted": cssTransition("transition", "size")
+}</code></pre>
+
+          <p>mountedプロパティは、その子要素がDOMツリーに追加されてbatonjsの管理下に入ったときに<code>true</code>になり、管理下から外れてDOMツリーから削除される直前に<code>false</code>になります。</p>
+
+          <p>mountedプロパティと子要素の状態には気を使う必要があります。mountedプロパティが<code>false</code>でbatonjsの管理下には無いが、DOMツリー上には存在するタイミングがあり得ますので注意してください。その微妙の状態があってはじめて、削除時のCSSトランジションができるわけでもあります。</p>
+
+          <p>mountedプロパティを用いたライフサイクルの更新監視は、直接追加・削除された子要素だけでなく、その子孫でも使えます。</p>
+
+          <p>注意<br />
+          mountedプロパティはbatonjsの中だけで通用する特殊なプロパティです。実際には存在しないので、そのプロパティにアクセスすることはできません。できるのは更新の検知だけです。</p>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

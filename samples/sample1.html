@@ -5,14 +5,14 @@
     <title>Simple counter</title>
   </head>
   <body>
-    <p>Count: <span id="counter"></span></p>
-    <button id="button" type="button">increment</button>
+    <p>Count: <span id="count"></span></p>
+    <button id="button" type="button">Count Up</button>
     <script type="module">
-      import {baton} from '../dist/baton.esm.js'
+      import {baton} from '../asset/baton.esm.js'
       const state = {count:0}
       function show(state) {
         return {
-          "#counter": {
+          "#count": {
             innerText: state.count
           }
         }
@@ -20,7 +20,7 @@
       document.getElementById('button').addEventListener('click', (ev) => {
         withState(state => ({count: state.count + 1}))
       })
-      const withState = baton(state, show)
+      const withState = baton(state, show, document.body)
     </script>
   </body>
 </html>

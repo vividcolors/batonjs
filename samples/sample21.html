@@ -12,17 +12,17 @@
         overflow: hidden;
       }
       .li.transition-enter {
-        transition: height 0.2s linear;
         height: 0;
       }
       .li.transition-enter-active {
-        height: var(--height);
-      }
-      .li.transition-exit {
         transition: height 0.2s linear;
         height: var(--height);
       }
+      .li.transition-exit {
+        height: var(--height);
+      }
       .li.transition-exit-active {
+        transition: height 0.2s linear;
         height: 0;
       }
     </style>
@@ -40,7 +40,7 @@
     </template>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script type="module">
-      import {baton, cssTransition, insert, remove, update} from '../dist/baton.esm.js'
+      import {baton, cssTransition, insert, remove, update} from '../asset/baton.esm.js'
       const state = {todos:[], form:{what:'', when:''}, nextId:1}
       const onDone = (ev) => {
         const i = +(ev.target.parentNode.dataset.index)
@@ -81,7 +81,8 @@
       const show = (state) => {
         return {
           "#todos": {
-            children: [state.todos.map(todo => ""+todo.id), document.getElementById('template')], 
+            batonChildKeys: state.todos.map(todo => ""+todo.id), 
+            batonChildTemplate: document.getElementById('template'), 
             li: (el, i) => {
               const todo = state.todos[i]
               return {
@@ -100,7 +101,7 @@
                 "[name=remove]": {
                   onclick: onRemove
                 }, 
-                "&mounted": cssTransition("transition", "size")
+                "&&mounted": cssTransition("transition", "size")
               }
             }
           }, 

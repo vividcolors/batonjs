@@ -1,7 +1,7 @@
-<html>
+<html lang="ja">
   <head>
     <meta charset="utf-8">
-    <title>baton</title>
+    <title>batonjs</title>
   </head>
   <body>
     <nav class="container-fluid" id="header"></nav>
@@ -15,9 +15,9 @@
 
         <ul>
           <li>導入しやすい<br /><small>Node.js、webpack、Babel等のツールは不要。CDNでロードするだけで始められます</small></li>
-          <li>協調的<br /><small>DOMを専有しないので、HTMLを出力するPHPやDOM要素を直接変更するjQueryなどと共存できます</small></li>
+          <li>協調的<br /><small>DOMを専有しないのでjQueryなど他のライブラリと共存できます</small></li>
           <li>ワンストップ<br /><small>他のライブラリは不要。これだけで宣言的にUIの状態を管理できます</small></li>
-          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、少しの学習ですぐに使えるようになります</small></li>
+          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、学習が少ないです</small></li>
           <li>保守しやすい<br /><small>枠組みに沿って書けば自然とコードが整理されるので、保守がしやすくなります</small></li>
         </ul>
 
@@ -37,11 +37,11 @@
 
           <p>batonjsは既存のHTMLページにUI管理を後付けします。だからこの例でもHTMLは完全な形になっています。</p>
 
-          <pre class="line-numbers"><code class="language-javascript">import {baton} from '../baton.js'
+          <pre class="line-numbers"><code class="language-javascript">import {baton} from '../asset/baton.esm.js'
 const state = {count:0}
 function show(state) {
   return {
-    "#counter": {
+    "#count": {
       innerText: state.count
     }
   }
@@ -54,13 +54,13 @@ const withState = baton(state, show, document.body)</code></pre>
           <p>2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonを起動するのに使います。</p>
 
           <p>3行目の<code>show</code>関数は、ページ状態をUIに反映させる方法を指示する関数です。最新のページ状態を受け取り、それを<strong>UI宣言</strong>に変換して返却します。UI宣言とは、どのUIがどうであるべきかを表現したオブジェクトです。<br />
-          5行目の<code>#counter</code>はCSSセレクターで、6行目の<code>innerText</code>はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。</p>
+          5行目の<code>#count</code>はCSSセレクターで、6行目の<code>innerText</code>はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。</p>
 
           <p>11行目の<code>withState</code>はページ状態を更新するための関数です。<code>withState</code>に渡したコールバック関数が新しいページ状態を返却すると、<code>withState</code>はその状態をUIに反映させます。もちろん、その過程で<code>show</code>関数が使われます。</p>
 
           <p>13行目ではbatonjsを起動しています。batonjsを起動すると、状態を管理するための<code>withState</code>が返却されます。</p>
 
-          <p>この例は、このリポジトリのsamples/sample1.htmlに実際に動くものがあります。samplesディレクトリには他にもたくさんの動くサンプルがあります。</p>
+          <p>この例は、<a href="samples.html">ライブサンプル</a>に<a href="samples.html?no=1">実際に動くもの</a>があります。ライブサンプルには他にもたくさんの動くサンプルがあります。</p>
         </section>
 
         <section>
@@ -68,7 +68,7 @@ const withState = baton(state, show, document.body)</code></pre>
 
           <h5>CDNから</h5>
 
-          <p>batonjsはCDNから読み込むのがおすすめです。インストールは不要です。<br />
+          <p>batonjsはインストールは必須ではありません。CDNから読み込むのが気楽でおすすめです。<br />
           あらかじめCDNからダウンロードしておき、自サーバーに配置することもできます。</p>
 
           <p>ESモジュール形式 <strong>TODO URL</strong></p>

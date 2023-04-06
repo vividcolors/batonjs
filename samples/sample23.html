@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSS Transition at initialization</title>
+  </head>
+  <body>
+    <style>
+      span.big {
+        font-size: 40px;
+      }
+      span.transition-enter {
+        font-size: 1rem;
+      }
+      span.transition-enter-active {
+        transition: font-size 0.2s linear;
+        font-size: 40px;
+      }
+    </style>
+    <div id="container">
+      <p data-baton-key="0"><span class="do">Do Animation</span><span class="no">No Animation</span></p>
+    </div>
+    <button class="button">Add Item</button>
+    <template id="template">
+      <p><span class="do">Do Animation</span><span class="no">No Animation</span></p>
+    </template>
+    <script type="module">
+      import {baton, cssTransition, insert} from '../asset/baton.esm.js'
+      const state = {items:["0"]}
+      const transition = cssTransition("transition")
+      const onAdd = (ev) => {
+        const item = "" + Date.now()
+        withState(state => ({items: insert(state.items.length, item, state.items)}))
+      }
+      const logMounted = (el, name, newValue, oldValue, cleanup) => {
+        const action = (newValue) ? "mounted" : "unmounted"
+        console.log(`"${el.getAttribute("class")}" ${action}`)
+      }
+      function show(state) {
+        return {
+          "#container": {
+            batonChildKeys: state.items, 
+            batonChildTemplate: document.getElementById("template"), 
+            "span.do": {
+              "class-big": true, 
+              "&&class-big": transition, 
+              "&&mounted": logMounted
+            }, 
+            "span.no": {
+              "class-big": true, 
+              "&class-big": transition, 
+              "&&mounted": logMounted
+            }
+          }, 
+          ".button": {
+            onclick: onAdd
+          }
+        }
+      }
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

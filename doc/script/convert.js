@@ -3,6 +3,7 @@ import { readFile, writeFile, opendir, copyFile, stat, mkdir } from 'node:fs/pro
 import { JSDOM } from 'jsdom'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import cpx from 'cpx'
 
 const show = (config) => {
   return {
@@ -43,6 +44,12 @@ const checkUpdated = (document) => {
   })
 }
 
+const checkDir = async (path) => {
+  await stat(path).catch(() => {
+    mkdir(path)
+  })
+}
+
 const run1 = async (lang, config, inPath, outPath) => {
   const dom = await readFile(inPath).then(str => (new JSDOM(str)))
 
@@ -67,9 +74,7 @@ const runDir = async (lang, config, inDirPath, outDirPath) => {
     const inPath = path.join(inDirPath, e.name)
     const outPath = path.join(outDirPath, e.name)
     if (e.isDirectory()) {
-      await stat(outPath).catch(() => {
-        mkdir(outPath)
-      })
+      checkDir(outPath)
       await runDir(lang, config, inPath, outPath)
     } else if (inPath.endsWith('.html')) {
       await run1(lang, config, inPath, outPath)
@@ -84,10 +89,34 @@ const run = async () => {
   const configPath = path.join(docPath, 'config.html')
   const config = await readFile(configPath).then(str => (new JSDOM(str)))
 
-  const inDirPath = path.join(docPath, "src")
-  const outDirPath = path.join(docPath, "dist")
-  await runDir("ja", config, inDirPath, outDirPath)
+  const inDirPathJa = path.join(docPath, "src/ja")
+  const outDirPathJa = path.join(docPath, "dist/ja")
+  checkDir(outDirPathJa)
+  await runDir("ja", config, inDirPathJa, outDirPathJa)
+  
+  const inDirPathEn = path.join(docPath, "src/en")
+  const outDirPathEn = path.join(docPath, "dist/en")
+  checkDir(outDirPathEn)
+  await runDir("en", config, inDirPathEn, outDirPathEn)
+
+  const inDirPathAsset = path.join(docPath, "src/asset")
+  const outDirPathAsset = path.join(docPath, "dist/asset")
+  checkDir(outDirPathAsset)
+  await runDir("en", config, inDirPathAsset, outDirPathAsset)
 }
 
+const copySamples = () => {
+  const srcPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../samples/sample*")
+  const dstPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../dist/samples")
+  cpx.copySync(srcPath, dstPath)
+}
+
+const copyBaton = () => {
+  const srcPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../asset/*")
+  const dstPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../dist/asset")
+  cpx.copySync(srcPath, dstPath)
+}
 
 await run()
+copySamples()
+copyBaton()

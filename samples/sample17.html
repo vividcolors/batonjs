@@ -22,17 +22,16 @@
         bottom: var(--bottom, auto);
       }
       .dropdown.transition-enter {
-        transition: height 0.2s linear, width 0.2s ease-in;
         display: block;
         height: 0;
         width: 0;
       }
       .dropdown.transition-enter-active {
+        transition: height 0.2s linear, width 0.2s ease-in;
         height: var(--height);
         width: var(--width);
       }
       .dropdown.transition-exit {
-        transition: height 0.2s linear, width 0.2s ease-in;
         display: block;
         height: var(--height);
         width: var(--width);
@@ -42,6 +41,7 @@
         bottom: var(--bottom, auto);
       }
       .dropdown.transition-exit-active {
+        transition: height 0.2s linear, width 0.2s ease-in;
         height: 0;
         width: 0;
       }
@@ -62,7 +62,7 @@
       </div>
     </div>
     <script type="module">
-      import {baton, cssTransition} from '../dist/baton.esm.js'
+      import {baton, cssTransition} from '../asset/baton.esm.js'
       const myTransition = cssTransition("transition", "dropdown")
       const state = {activeDropdownId: null, activeCallerId: null}
       const ontoggle = (ev) => {

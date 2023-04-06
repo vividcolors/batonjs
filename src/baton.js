@@ -1,4 +1,8 @@
 
+const LC_MOUNTED_DIRECTLY = "MD"
+const LC_MOUNTED_INDIRECTLY = "MI"
+const LC_UNMOUNTED_DIRECTLY = "UD"
+const LC_UNMOUNTED_INDIRECTLY = "UI"
 
 export const baton = (state, show, baseEl = null) => {
   const lifecycles = new Map()
@@ -35,35 +39,33 @@ export const baton = (state, show, baseEl = null) => {
     return keys
   }
 
-  const dispatchElement = (decls, el) => {
+  const addLifecycleDeep = (el, mounted, directly = true) => {
+    const value = (mounted ? "M" : "U") + (directly ? "D" : "I")
+    if (mounted) lifecycles.set(el, value)
+    for (let c = el.firstChild; c; c = c.nextSibling) {
+      if (c.nodeType === c.ELEMENT_NODE) addLifecycleDeep(c, mounted, false)
+    }
+    if (!mounted) lifecycles.set(el, value)
+  }
+
+  const dispatchElement = (decls, el, isFirstTime) => {
     const callbacks = []
+    const box = {oldValue:null, newValue:null}
+
+    if (lifecycles.get(el)?.[0] === "M") {
+      isFirstTime = true
+    }
     
     // sync properties from declaration to element.
     for (let name in decls) {
-      let value = decls[name]
-      if (declType(name, value) === "property") {
-        value = dispatchProperty(name, value, el)
+      if (declType(name, decls[name]) === "property") {
+        box.newValue = decls[name]
+        box.oldValue = null
+        dispatchProperty(name, box, el, decls)
         // handles update observer
-        const observerName = "&" + name
-        if (decls[observerName]) {
-          if (! el.batonCache) {
-            el.batonCache = {}
-          }
-          if (name in el.batonCache) {
-            // TODO: we should obtain oldValue even if el.batonCache[name] is missing.
-            const oldValue = el.batonCache[name]
-            if (oldValue !== value) {
-              callbacks.push([decls[observerName], el, name, value, oldValue, null])
-            }
-          }
-          el.batonCache[name] = value
-        }
-        // Always store event handlers
-        if (name[0] === 'o' && name[1] === 'n') {
-          if (! el.batonCache) {
-            el.batonCache = {}
-          }
-          el.batonCache[name] = value
+        const observer = isFirstTime ? decls["&&" + name] : (decls["&&" + name] || decls["&" + name])
+        if (observer && box.oldValue !== box.newValue) {
+          callbacks.push([observer, el, name, box.newValue, box.oldValue, null])
         }
       }
     }
@@ -73,13 +75,14 @@ export const baton = (state, show, baseEl = null) => {
       f(...callback)
     }
     // handles `mounted' callback
-    if ("&mounted" in decls) {
+    const mountedObserver = decls["&&mounted"]
+    if (mountedObserver) {
       // If the declaration is a function, the declaration cannot be referenced 
       // because the corresponding element does not exist when unmounted.
       // Therefore, `mounted' callback should be stored in the element so that 
       // it can be referenced even when there is no declaration.
-      el.batonLifecycle = decls["&mounted"]
-      if (lifecycles.get(el) === true) {
+      el.batonLifecycle = mountedObserver
+      if (lifecycles.get(el)?.[0] === "M") {
         el.batonLifecycle(el, "mounted", true, false, null)
         lifecycles.delete(el)
       }
@@ -94,11 +97,12 @@ export const baton = (state, show, baseEl = null) => {
           if (subEl.batonUnmounted) {
             // subEl has been already unmounted. Just ignore.
             continue
-          } else if (lifecycles.get(subEl) === false) {
+          } else if (lifecycles.get(subEl)?.[0] === "U") {
             // subEl is just being unmounted. Unmount now.
+            const lifecycle = lifecycles.get(subEl)
             subEl.batonUnmounted = true
             const cleanup = () => {
-              subEl.parentNode.removeChild(subEl)
+              if (lifecycle === LC_UNMOUNTED_DIRECTLY) subEl.parentNode.removeChild(subEl)
               delete subEl.batonUnmounted
             }
             if (subEl.batonLifecycle) {
@@ -110,52 +114,52 @@ export const baton = (state, show, baseEl = null) => {
             continue
           }
           const subDecls = (typeof value == "function") ? value(subEl, i) : value
-          dispatchElement(subDecls, subEl)
+          dispatchElement(subDecls, subEl, isFirstTime)
           i++
         }
       }
     }
   }
 
-  const dispatchProperty = (name, value, el) => {
+  const dispatchProperty = (name, box, el, decls) => {
     if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
       const eventType = name.slice(2)
-      if (el.batonCache && el.batonCache[name]) {
-        if (el.batonCache[name] !== value) {
+      if (! el.batonEhcache) {
+        el.batonEhcache = {}
+      }
+      if (el.batonEhcache[name]) {
+        box.oldValue = el.batonEhcache[name]
+        if (box.oldValue !== box.newValue) {
           // handler changed
-          el.removeEventListener(eventType, el.batonEhcache[name])
-          el.addEventListener(eventType, value)
+          el.removeEventListener(eventType, box.oldValue)
+          el.addEventListener(eventType, box.newValue)
         }
       } else {
         // new handler
-        el.addEventListener(eventType, value)
+        el.addEventListener(eventType, box.newValue)
+        box.oldValue = null
       }
     }
-    else if (name[0] == '&') {  // case: update handler
-      // we just ignore it
-    }
-    else if (name === 'children') {  // case: children special attribute
-      const [newKeys, template] = value
-      if (! el.batonCache) {
-        el.batonCache = {}
-      }
+    else if (name === 'batonChildKeys') {  // case: batonChildKeys special attribute
+      const newKeys = box.newValue
       const keyToEl = {}
       for (let c of el.childNodes) {
         if (c.nodeType === c.ELEMENT_NODE && c.hasAttribute('data-baton-key') && c.getAttribute('data-baton-key')) {
           keyToEl[c.getAttribute('data-baton-key')] = c
         }
       }
-      const oldKeys = (el.batonCache && el.batonCache.children) ? el.batonCache.children : collectKeys(el)
+      const oldKeys = el.batonChildKeys ? el.batonChildKeys : collectKeys(el)
       for (let ev of diff(newKeys, oldKeys)) {
         switch (ev.type) {
           case 'insert': {
+            const template = decls.batonChildTemplate || el.batonChildTemplate
             const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
                     : template.cloneNode(true)
             c.setAttribute('data-baton-key', ev.key)
             delete c.batonUnmounted
             const prev = ev.afterKey ? keyToEl[ev.afterKey] : null
             el.insertBefore(c, prev ? prev.nextSibling : el.childNodes[0])
-            lifecycles.set(c, true)
+            addLifecycleDeep(c, true)
             keyToEl[ev.key] = c
             break
           }
@@ -167,60 +171,69 @@ export const baton = (state, show, baseEl = null) => {
           }
           case 'remove': {
             const c = keyToEl[ev.key]
-            lifecycles.set(c, false)
+            addLifecycleDeep(c, false)
             break
           }
         }
       }
-      el.batonCache.children = newKeys
+      box.oldValue = el.batonChidKeys
+      el.batonChildKeys = newKeys
+    }
+    else if (name === "batonChildTemplate") {  // case: batonChildTemplate special
+      box.oldValue = el.batonChildTemplate
+      el.batonChildTemplate = box.newValue
     }
     else if (name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {  // case: dataset
-      value = "" + value
-      if (value === "") el.removeAttribute(name) 
-      else el.setAttribute(name, value)
+      box.newValue = "" + box.newValue
+      box.oldValue = el.getAttribute(name)
+      if (box.newValue === "") el.removeAttribute(name) 
+      else el.setAttribute(name, box.newValue)
     }
     else if (name[0] == 'c' && name[1] == 'l' && name[2] == 'a' && name[3] == 's' && name[4] == 's' && name[5] == '-') {  // case: css class
       const cname = name.slice(6)
-      if (value) el.classList.add(cname)
+      box.oldValue = el.classList.contains(cname)
+      if (box.newValue) el.classList.add(cname)
       else el.classList.remove(cname)
     }
     else if (name[0] == 's' && name[1] == 't' && name[2] == 'y' && name[3] == 'l' && name[4] == 'e' && name[5] == '-') {  // case: style
       const sname = name.slice(6)
-      value = "" + value
-      if (value === "" || value === null) el.style.removeProperty(sname)
-      else el.style.setProperty(sname, value)
+      box.newValue = "" + box.newValue
+      box.oldValue = el.style.getPropertyValue(sname)
+      if (box.newValue === "" || box.newValue === null) el.style.removeProperty(sname)
+      else el.style.setProperty(sname, box.newValue)
     }
     else {  // otherwise: common attributes
       if (name in el) {
-        value = value == null ? "" : value
-        el[name] = value
+        box.newValue = (box.newValue == null) ? "" : box.newValue
+        box.oldValue = el[name]
+        el[name] = box.newValue
       } else {
-        if (value != null && value !== false) el.setAttribute(name, value)
+        box.oldValue = el.getAttribute(name)
+        if (box.newValue != null && box.newValue !== false) el.setAttribute(name, box.newValue)
         else el.removeAttribute(name)
       }
     }
-    return value
   }
 
-  const reflect = () => {
+  const reflect = (isFirstTime) => {
     reflectionScheduled = false
     
     const decls0 = show(state)
     const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
-    dispatchElement(decls, baseEl)
+    dispatchElement(decls, baseEl, isFirstTime)
     
     // There may be elements without UI declarations. We process them here.
     lifecycles.forEach((lifecycle, el) => {
-      if (! lifecycle) {
+      if (lifecycle === LC_UNMOUNTED_DIRECTLY) {
         el.parentNode.removeChild(el)
       }
     })
     lifecycles.clear()
   }
 
-  const scheduleReflection = () => {
+  const scheduleReflection = (isFirstTime) => {
     if (! reflectionScheduled) {
-      setTimeout(reflect)
+      setTimeout(reflect, 0, isFirstTime)
       reflectionScheduled = true
     }
   }
@@ -229,11 +242,11 @@ export const baton = (state, show, baseEl = null) => {
     const state0 = update(state)
     if ((state0 !== null && typeof state0 !== "undefined") && state0 !== state) {
       state = state0
-      scheduleReflection()
+      scheduleReflection(false)
     }
   }
 
-  scheduleReflection()
+  scheduleReflection(true)
 
   return withState
 }

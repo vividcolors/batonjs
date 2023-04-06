@@ -3,7 +3,8 @@
     <meta charset="utf-8">
   </head>
   <body>
-    <template class="site-title ja">導入しやすく協調的な、Web向け宣言型UIフレームワーク</template>
+    <template class="site-title ja">導入しやすく協調的な、Web向け宣言型UIフレームワーク batonjs</template>
+    <template class="site-title en">batonjs, declarative UI framework for Web that is easy to introduce and collaborative</template>
     <template class="head ja en">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/asset/pico.css" />
@@ -12,33 +13,56 @@
       <link rel="stylesheet" href="/asset/own.css" />
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </template>
-    <template class="header ja">
+    <template class="header ja en">
       <ul>
-        <li><a href="/"><strong>batonjs</strong></a></li>
-        <li>Documentation</li>
+        <li class="show-on-mobile"><a id="open-menu" class="secondary"><span class="material-icons">menu</span></a></li>
+        <li><a href="./" class="contrast"><strong>batonjs</strong></a></li>
       </ul>
       <ul>
-        <li><a href="#" target="_blank"><img src="/asset/github-mark.png" alt="GitHub" /></a></li>
+        <li><a href="https://github.com/vividcolors/batonjs" target="_blank"><img src="/asset/github-mark.png" alt="GitHub" /></a></li>
         <li>
           <details role="list" dir="rtl">
-            <summary aria-haspopup="listbox" role="link"><span class="material-icons">translate</span></summary>
+            <summary aria-haspopup="listbox" role="link" class="secondary"><span class="material-icons">translate</span></summary>
             <ul role="listbox">
-              <li><a>English</a></li>
-              <li><a>日本語</a></li>
+              <li><a class="lang" data-lang="en">English</a></li>
+              <li><a class="lang" data-lang="ja">日本語</a></li>
             </ul>
           </details>
         </li>
       </ul>
     </template>
-    <template class="sidebar ja en">
-      <nav class="closed-on-mobile">
-        <ol>
-          <li><a href="baton.html" class="secondary">batonコア</a></li>
-          <li><a href="csstransition.html" class="secondary">CSSトランジション</a></li>
-          <li><a href="data.html" class="secondary">データ処理</a></li>
-          <li><a href="event.html" class="secondary">イベントフィルター</a></li>
-          <li><a</li>
-        </ol>
+    <template class="sidebar ja">
+      <nav>
+        <a id="close-menu" class="show-on-mobile secondary"><span class="material-icons">close</span></a>
+        <ul>
+          <li>
+            <div>ドキュメント</div>
+            <ul>
+              <li><a href="baton.html" class="secondary">batonコア</a></li>
+              <li><a href="csstransition.html" class="secondary">CSSトランジション</a></li>
+              <li><a href="data.html" class="secondary">データ処理</a></li>
+              <li><a href="event.html" class="secondary">イベントフィルター</a></li>
+            </ul>
+          </li>
+          <li><a href="samples.html" class="secondary">ライブサンプル</a></li>
+        </ul>
+      </nav>
+    </template>
+    <template class="sidebar en">
+      <nav>
+        <a id="close-menu" class="show-on-mobile secondary"><span class="material-icons">close</span></a>
+        <ul>
+          <li>
+            <div>Document</div>
+            <ul>
+              <li><a href="baton.html" class="secondary">baton core</a></li>
+              <li><a href="csstransition.html" class="secondary">CSS transition</a></li>
+              <li><a href="data.html" class="secondary">Data processing</a></li>
+              <li><a href="event.html" class="secondary">Event filter</a></li>
+            </ul>
+          </li>
+          <li><a href="samples.html" class="secondary">Live samples</a></li>
+        </ul>
       </nav>
     </template>
     <template class="toc ja">
@@ -47,11 +71,58 @@
         <ol class="toc-entries"></ol>
       </details>
     </template>
+    <template class="toc en">
+      <details>
+        <summary>TOC</summary>
+        <ol class="toc-entries"></ol>
+      </details>
+    </template>
     <template class="footer ja en">
       <hr />
       <script src="/asset/prism.js"></script>
       <p><small>&copy; 2023 <a href="https://www.vividcolors.co.jp/" target="_blank">vividcolors, inc.</a><br />
       This beautiful site is styled by <a href="https://picocss.com/" target="_blank">Pico.css</a></small></p>
+      <div id="overlay"></div>
+      <script type="module">
+        import {baton, cssTransition} from '/asset/baton.esm.js'
+        const transition = cssTransition("transition")
+        const openDrawer = (ev) => {
+          withState(state => ({...state, drawerOpen:true}))
+        }
+        const closeDrawer = (ev) => {
+          withState(state => ({...state, drawerOpen:false}))
+        }
+        const switchLang = (ev) => {
+          const toLang = ev.target.dataset.lang
+          const fromLang = document.documentElement.getAttribute("lang")
+          if (toLang != fromLang) {
+            const url0 = location.href
+            const url1 = url0.replace(`/${fromLang}/`, `/${toLang}/`)
+            location.href = url1
+          }
+          ev.target.closest("details").open = false
+        }
+        const state = {drawerOpen:false}
+        const show = (state) => ({
+          "#open-menu": {
+            onclick: openDrawer
+          }, 
+          "#close-menu": {
+            onclick: closeDrawer
+          }, 
+          "#sidebar": {
+            "class-is-open": state.drawerOpen
+          }, 
+          "#overlay": {
+            "class-is-open": state.drawerOpen, 
+            onclick: closeDrawer
+          }, 
+          ".lang": {
+            onclick: switchLang
+          }
+        })
+        const withState = baton(state, show)
+      </script>
     </template>
   </body>
 </html>

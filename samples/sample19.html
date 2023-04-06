@@ -7,17 +7,17 @@
   <body>
     <style>
       li.transition-enter {
-        transition: opacity 0.2s linear;
         opacity: 0;
       }
       li.transition-enter-active {
-        opacity: 1;
-      }
-      li.transition-exit {
         transition: opacity 0.2s linear;
         opacity: 1;
       }
+      li.transition-exit {
+        opacity: 1;
+      }
       li.transition-exit-active {
+        transition: opacity 0.2s linear;
         opacity: 0;
       }
     </style>
@@ -29,8 +29,8 @@
       <li><span></span><button type="button" class="removeButton">Remove</button></li>
     </template>
     <script type="module">
-      import {baton, cssTransition, insert, remove} from '../dist/baton.esm.js'
-      const template = document.getElementById("template")
+      import {baton, cssTransition, insert, remove} from '../asset/baton.esm.js'
+      const template = document.getElementById("template", {timeout:10000000})
       const fade = cssTransition('transition')
       const state = {items:["1"]}
       const onremove = (ev) => {
@@ -43,9 +43,10 @@
       }
       const show = (state) => ({
         ul: {
-          children: [state.items, template], 
+          batonChildKeys: state.items, 
+          batonChildTemplate: template, 
           li: (el, i) => ({
-            "&mounted": fade, 
+            "&&mounted": fade, 
             "span": {
               innerText: state.items[i]
             }, 
