@@ -1,19 +1,17 @@
 
 # batonjs
 
-導入しやすく協調的な、Web向け宣言型UIフレームワーク。
-
-## 特徴
+導入しやすく協調的な、Web向け宣言型UIフレームワーク
 
 - 導入しやすい：Node.js、webpack、Babel等のツールは不要。CDNでロードするだけで始められます
-- 協調的：DOMを専有しないので、HTMLを出力するPHPやDOM要素を直接変更するjQueryなどと共存できます
+- 協調的：DOMを専有しないのでjQueryなど他のライブラリと共存できます
 - ワンストップ：他のライブラリは不要。これだけで宣言的にUIの状態を管理できます
-- 学びやすい：Web標準の上に独自の概念を少し付け足しただけなので、少しの学習ですぐに使えるようになります
+- 学びやすい：Web標準の上に独自の概念を少し付け足しただけなので、学習が少なく済みます
 - 保守しやすい：枠組みに沿って書けば自然とコードが整理されるので、保守がしやすくなります
 
 ## 概要
 
-簡単なクリックカウントを例に、batonjsを見てみましょう。  
+簡単なクリックカウントを例にbatonjsを見てみましょう。  
 
 ```html
 <html>
@@ -27,11 +25,11 @@
 batonjsは既存のHTMLページにUI管理を後付けします。だからこの例でもHTMLは完全な形になっています。  
 
 ```javascript
-import {baton} from '../baton.js'
+import {baton} from '../asset/baton.esm.js'
 const state = {count:0}
 function show(state) {
   return {
-    "#counter": {
+    "#count": {
       innerText: state.count
     }
   }
@@ -42,41 +40,43 @@ document.getElementById('button').addEventListener('click', (ev) => {
 const withState = baton(state, show, document.body)
 ```
 
-2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonを起動するのに使います。
+2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonjsを起動するのに使います。
 
 3行目の`show`関数は、ページ状態をUIに反映させる方法を指示する関数です。最新のページ状態を受け取り、それを __UI宣言__ に変換して返却します。UI宣言とは、どのUIがどうであるべきかを表現したオブジェクトです。  
-5行目の`#counter`はCSSセレクターで、6行目の`innerText`はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。
+5行目の`#count`はCSSセレクターで、6行目の`innerText`はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。
 
 11行目の`withState`はページ状態を更新するための関数です。`withState`に渡したコールバック関数が新しいページ状態を返却すると、`withState`はその状態をUIに反映させます。もちろん、その過程で`show`関数が使われます。
 
 13行目ではbatonjsを起動しています。batonjsを起動すると、状態を管理するための`withState`が返却されます。
 
-この例は、このリポジトリのsamples/sample1.htmlに実際に動くものがあります。samplesディレクトリには他にもたくさんの動くサンプルがあります。
+この例は、[ライブサンプル](https://batonjs.com/ja/samples.html)に[実際に動くもの](https://batonjs.com/ja/samples.html?no=1)があります。このリポジトリに含まれているライブサンプルには他にもたくさんの動くサンプルがあります。
 
 ### もっと知るには
 
-batonjsには、プロパティの更新監視、CSSトランジションのサポート、DOM要素の追加・削除およびライフサイクルの管理など、様々な機能があります。  
-そのような機能を組み合わせることで、UIのアニメーションや他ライブラリとの連携といった雑多な処理をページの状態管理の核心部分から切り離すことができます。
+batonjsには、プロパティの更新監視、CSSトランジションのサポート、DOM要素の追加・削除およびライフサイクルの管理など、様々な機能があります。これらの機能を組み合わせて動的なWebページを作れます。
 
-詳細は、[公式ドキュメント](https://batonjs.com/doc/)を参照してください。
+batonjsの特筆すべき点は、フレームワークに従って作っていくことで、ページ状態の更新、UIへの反映、UIの細かな挙動を分離できることにあります。
+
+詳細は[公式ドキュメント](https://batonjs.com/ja/)を参照してください。
 
 ## インストール
 
 ### CDNから
 
-batonjsはCDNから読み込むのがおすすめです。インストールは不要です。  
+batonjsはインストールは必須ではありません。CDNから読み込むのが気楽でおすすめです。  
 あらかじめCDNからダウンロードしておき、自サーバーに配置することもできます。
 
 ESモジュール形式 __TODO URL__
 
-```
+```html
 <script type="module">
 import {baton} from '../dist/baton.esm.js'
 </script>
 ```
 
 UMD形式 __TODO URL__
-```
+
+```html
 <script src="../dist/baton.umd.js"></script>
 <script>
 const baton = batonjs.baton
@@ -104,8 +104,12 @@ const {baton} = require('batonjs')
 
 ## 動作環境
 
-Chrome、Edge、Firefox、Chrome for Android、iOS Safari各最新版。  
-Node.js v14以上。
+- Chrome最新版
+- Edge最新版
+- Firefox最新版
+- Chrome for Android最新版
+- iOS Safari最新版
+- Node.js v14以上
 
 ## ライセンス
 
