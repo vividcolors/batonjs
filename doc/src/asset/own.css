@@ -115,3 +115,27 @@ iframe#result, pre#src-wrap {
     max-height: calc(100vh - 5.5rem);
   }
 }
+
+.description-column {
+  min-width: 200px;
+}
+
+.force-mobile-layout .container-fluid {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.force-mobile-layout #selector {
+  padding: 5px 10px;
+  max-width: 100%;
+  width: 300px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.force-mobile-layout #src-wrap {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 16px;
+}
+.force-mobile-layout #result {
+  border: 3px solid var(--nav-border-color) !important;
+}
