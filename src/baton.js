@@ -48,7 +48,7 @@ export const baton = (state, show, baseEl = null) => {
     if (!mounted) lifecycles.set(el, value)
   }
 
-  const dispatchElement = (decls, el, isFirstTime) => {
+  const processElement = (decls, el, isFirstTime) => {
     const callbacks = []
     const box = {oldValue:null, newValue:null}
 
@@ -61,7 +61,7 @@ export const baton = (state, show, baseEl = null) => {
       if (declType(name, decls[name]) === "property") {
         box.newValue = decls[name]
         box.oldValue = null
-        dispatchProperty(name, box, el, decls)
+        processProperty(name, box, el, decls)
         // handles update observer
         const observer = isFirstTime ? decls["&&" + name] : (decls["&&" + name] || decls["&" + name])
         if (observer && box.oldValue !== box.newValue) {
@@ -87,7 +87,7 @@ export const baton = (state, show, baseEl = null) => {
         lifecycles.delete(el)
       }
     }
-    // dispatch sub declarations
+    // process sub declarations
     for (let name in decls) {
       const value = decls[name]
       if (declType(name, value) === "element") {
@@ -114,14 +114,14 @@ export const baton = (state, show, baseEl = null) => {
             continue
           }
           const subDecls = (typeof value == "function") ? value(subEl, i) : value
-          dispatchElement(subDecls, subEl, isFirstTime)
+          processElement(subDecls, subEl, isFirstTime)
           i++
         }
       }
     }
   }
 
-  const dispatchProperty = (name, box, el, decls) => {
+  const processProperty = (name, box, el, decls) => {
     if (name[0] == 'o' && name[1] == 'n') {  // case: event handler
       const eventType = name.slice(2)
       if (! el.batonEhcache) {
@@ -220,7 +220,7 @@ export const baton = (state, show, baseEl = null) => {
     
     const decls0 = show(state)
     const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
-    dispatchElement(decls, baseEl, isFirstTime)
+    processElement(decls, baseEl, isFirstTime)
     
     // There may be elements without UI declarations. We process them here.
     lifecycles.forEach((lifecycle, el) => {
