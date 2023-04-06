@@ -19,13 +19,13 @@
         <li><a href="/" class="contrast"><strong>batonjs</strong></a></li>
       </ul>
       <ul>
-        <li><a href="#" target="_blank"><img src="/asset/github-mark.png" alt="GitHub" /></a></li>
+        <li><a href="https://github.com/vividcolors/batonjs" target="_blank"><img src="/asset/github-mark.png" alt="GitHub" /></a></li>
         <li>
           <details role="list" dir="rtl">
             <summary aria-haspopup="listbox" role="link" class="secondary"><span class="material-icons">translate</span></summary>
             <ul role="listbox">
-              <li><a>English</a></li>
-              <li><a>日本語</a></li>
+              <li><a class="lang" data-lang="en">English</a></li>
+              <li><a class="lang" data-lang="ja">日本語</a></li>
             </ul>
           </details>
         </li>
@@ -92,6 +92,16 @@
         const closeDrawer = (ev) => {
           withState(state => ({...state, drawerOpen:false}))
         }
+        const switchLang = (ev) => {
+          const toLang = ev.target.dataset.lang
+          const fromLang = document.documentElement.getAttribute("lang")
+          if (toLang != fromLang) {
+            const url0 = location.href
+            const url1 = url0.replace(`/${fromLang}/`, `/${toLang}/`)
+            location.href = url1
+          }
+          ev.target.closest("details").open = false
+        }
         const state = {drawerOpen:false}
         const show = (state) => ({
           "#open-menu": {
@@ -106,6 +116,9 @@
           "#overlay": {
             "class-is-open": state.drawerOpen, 
             onclick: closeDrawer
+          }, 
+          ".lang": {
+            onclick: switchLang
           }
         })
         const withState = baton(state, show)
