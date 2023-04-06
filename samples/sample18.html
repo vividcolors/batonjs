@@ -17,11 +17,17 @@
       const state = {items:["1"]}
       const onremove = (ev) => {
         const index = ev.target.dataset.index
-        withState(state => ({...state, items:remove(index, state.items)}))
+        withState(state => {
+          const items = remove(index, state.items)
+          return update("items", items, state)
+        })
       }
       const onappend = (ev) => {
-        const item = "" + Date.now()
-        withState(state => ({...state, items:insert(state.items.length, item, state.items)}))
+        withState(state => {
+          const item = "" + Date.now()
+          const items = insert(state.items.length, item, state.items)
+          return update("items", items, state)
+        })
       }
       const show = (state) => ({
         ul: {
