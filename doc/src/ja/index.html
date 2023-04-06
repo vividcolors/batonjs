@@ -17,7 +17,7 @@
           <li>導入しやすい<br /><small>Node.js、webpack、Babel等のツールは不要。CDNでロードするだけで始められます</small></li>
           <li>協調的<br /><small>DOMを専有しないのでjQueryなど他のライブラリと共存できます</small></li>
           <li>ワンストップ<br /><small>他のライブラリは不要。これだけで宣言的にUIの状態を管理できます</small></li>
-          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、学習が少ないです</small></li>
+          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、学習が少なく済みます</small></li>
           <li>保守しやすい<br /><small>枠組みに沿って書けば自然とコードが整理されるので、保守がしやすくなります</small></li>
         </ul>
 
@@ -26,7 +26,7 @@
         <section>
           <h2 id="overview">概要</h2>
 
-          <p>簡単なクリックカウントを例に、batonjsを見てみましょう。</p>
+          <p>簡単なクリックカウントを例にbatonjsを見てみましょう。</p>
 
           <pre class="line-numbers"><code class="language-html">&lt;html>
   &lt;body>
@@ -51,7 +51,7 @@ document.getElementById('button').addEventListener('click', (ev) => {
 })
 const withState = baton(state, show, document.body)</code></pre>
 
-          <p>2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonを起動するのに使います。</p>
+          <p>2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonjsを起動するのに使います。</p>
 
           <p>3行目の<code>show</code>関数は、ページ状態をUIに反映させる方法を指示する関数です。最新のページ状態を受け取り、それを<strong>UI宣言</strong>に変換して返却します。UI宣言とは、どのUIがどうであるべきかを表現したオブジェクトです。<br />
           5行目の<code>#count</code>はCSSセレクターで、6行目の<code>innerText</code>はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。</p>
