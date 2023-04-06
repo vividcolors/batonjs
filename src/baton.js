@@ -75,7 +75,7 @@ export const baton = (state, show, baseEl = null) => {
       f(...callback)
     }
     // handles `mounted' callback
-    const mountedObserver = isFirstTime ? decls["&&mounted"] : (decls["&&mounted"] || decls["&mounted"])
+    const mountedObserver = decls["&&mounted"]
     if (mountedObserver) {
       // If the declaration is a function, the declaration cannot be referenced 
       // because the corresponding element does not exist when unmounted.
