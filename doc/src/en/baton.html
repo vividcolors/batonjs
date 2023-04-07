@@ -1,0 +1,409 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>baton core</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>baton core</h1>
+          <h4>This article describes the core of batonjs, the baton function and its surroundings.</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="baton">baton</h2>
+
+          <p>Launches batonjs. Once launched, batonjs manages a single page state.</p>
+
+          <h5>Example</h5>
+          <pre class="line-numbers"><code class="language-javascript">const withState = baton({count:0}, show, document.getElementById('root'))</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>state</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>Initial page state; you cannot specify <code>null</code> or <code>undefined</code>.</td>
+                </tr>
+                <tr>
+                  <td>show</td>
+                  <td>function</td>
+                  <td>mandatory</td>
+                  <td>A function to convert page state to UI declaration. See below.</td>
+                </tr>
+                <tr>
+                  <td>baseEl</td>
+                  <td>DOM element</td>
+                  <td><code>document.documentElement</code>*</td>
+                  <td>In the UI declaration, the CSS selector is used to extract DOM elements, and this is the DOM element that is used as the starting point for the extraction. If omitted, it will be the entire HTML document.<br />
+                  * You cannot omit this if you run batonjs on Node.js.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>withState</td>
+                  <td>function</td>
+                  <td>It takes a function that updates the page state, calls that function, and reflects the resulting page state on the page. See below.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="state">Page state and its update by withState</h2>
+
+          <p>The page state is represented by a single javascript value. The value can be anything, but <code>null</code> and <code>undefined</code> are not allowed.  Use <code>withState</code> to change the page state.  batonjs does not change the page state at all.</p>
+
+          <p>In most cases, <code>withState</code> is used in event handlers. The flow of the process is as follows: the user interacts with the UI, an event occurs, and the page state is updated using <code>withState</code> in the handler.</p>
+
+          <p>The callback function passed to <code>withState</code> updates the page state and returns it.<br />
+          At this time, to update the page state, you must return a different value (in the sense of <code>===</code>) than the original value. batonjs uses <code>===</code> to determine if the page state has changed or not. This means that you cannot use an assignment (destructive update) like <code>state.count++</code>.<br />
+          Also, if the returned value is <code>null</code> or <code>undefined</code>, batonjs determines that the page state has not changed.</p>
+          
+          <p>If batonjs is launched multiple times within a single page, <code>withState</code> is a different value for each launch.<br />
+          You can get <code>withState</code> as the return value of the function <code>baton</code> that invokes batonjs.</p>
+          
+          <p></p>
+
+          <h5>Example</h5>
+          <pre class="line-numbers"><code class="language-javascript">myButton.addEventListener(ev => {
+  withState(state => ({count: state.count + 1}))
+})</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>update</td>
+                  <td>function</td>
+                  <td>mandatory</td>
+                  <td>A function that takes a page state and returns a new, updated page state. If this function returns <code>null</code> or <code>undefined</code>, it is assumed that the page state has not changed.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <p>none</p>
+        </section>
+
+        <section>
+          <h2 id="ui-decl">show and UI declaration</h2>
+          
+          <p>batonjs calls the show function when the page state is updated.<br />
+          The show function is a user-defined function that translates the page state into a UI declaration.<br />
+          You pass the show function to batonjs as a bootstrap parameter.</p>
+
+          <p>A UI declaration is a single javascript value that expresses the state of the UI. It primarily expresses which UI components change in response to changes in page state and how.<br />
+          There are two basic syntaxes for UI declarations.</p>
+
+          <dl>
+            <dt>Element declaration</dt>
+            <dd>This is a declaration of a DOM element. The left-hand side is a CSS selector, and the right-hand side is a block (object) that groups together other declarations. The implication is that the declarations on the right-hand side should be applied to the DOM elements extracted by the CSS selector on the left-hand side.</dd>
+            <dd>Note that batonjs uses querySelectorAll internally, but <a href="https://developer.mozilla.org/ja/docs/Web/API/Document_object_model/Locating_DOM_elements_using_selectors" target="_blank">the specification of this is slightly different from that of CSS</a>.</dd>
+            <dd>I mentioned earlier that "the show function returns the UI declaration," but this was actually not strictly true. Strictly speaking, "the show function returns the right-hand side of the element declaration." What is the left-hand side, then, is the DOM element that is passed as the third argument to the baton function.</dd>
+            <dt>Property declaration</dt>
+            <dd>Declaration of properties or attributes of a DOM element. The left-hand side is the property name and the right-hand side is the value of it.<br />
+            You can write any property or attribute of any DOM element, even a data-* attribute such as <code>data-my-attr</code>. However, if you write a read-only property, an error will occur later when batonjs tries to update it.</dd>
+          </dl>
+          
+          <p>In the example below, lines 2-4 are the element declaration and line 3 is a property declaration; the block starting at line 1 is the right-hand side of the element declaration.</p>
+
+          <h5>Example</h5>
+          <pre class="line-numbers"><code class="language-javascript">const show = (state) => ({
+  "#counter": {
+    innerText: state.count
+  }
+})
+const withState = baton(state, show, document.body)</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>state</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>Latest page state.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>uiDeclaration</td>
+                  <td>object</td>
+                  <td>UI declaration (Strictly, the right-hand side of Element declaration)</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="update-observer">Update monitoring of property</h2>
+
+          <p>You can have a callback function called when a DOM element property value changes; in batonjs we call this <strong>update monitoring</strong>.<br />
+          Update monitoring is written in the UI declaration. The left-hand side is the property name to be monitored prefixed with "&" , and the right-hand side is the callback function.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const handleChecked = (element, propertyName, newValue, oldValue, cleanup) => {...}
+const show = (state) => ({
+  checked: state.checkboxChecked, 
+  "&checked": handleChecked
+})</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>element</td>
+                  <td>DOM Element</td>
+                  <td>mandatory</td>
+                  <td>DOM element with changed properties</td>
+                </tr>
+                <tr>
+                  <td>propertyName</td>
+                  <td>string</td>
+                  <td>mandatory</td>
+                  <td>Name of the property that was changed</td>
+                </tr>
+                <tr>
+                  <td>newValue</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>Property value after change</td>
+                </tr>
+                <tr>
+                  <td>oldValue</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>Property value before change</td>
+                </tr>
+                <tr>
+                  <td>cleanup</td>
+                  <td>function|null</td>
+                  <td>mandatory</td>
+                  <td>The cleanup process is passed as a function if batonjs needs the cleanup process after the callback is executed. If you receive a non-null value, call it after you have finished using the target DOM element. cleanup function has no parameters or return value.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <p>none</p>
+
+          <p>You may have thought. "I changed the page state myself and reflected it in the UI myself. And now you're going to tell me what you've changed? What's the value in that?"<br />
+          Actually, there is great value in this. It is the splitting of the program code.</p>
+
+          <p>The update monitoring can be used to trigger animations or external library components, such as bootstrap, when property value changes.<br />
+          These processes are as obtrusive as a side road from the perspective of managing page status.<br />
+          The purpose of update monitoring is to separate these side processes from the management of page state.</p>
+        </section>
+
+        <section>
+          <h2 id="strong-update-observer">Strong update monitoring of property</h2>
+
+          <p>The update monitoring described in the previous chapter is actually just a typical story. By typical, we mean the pattern of "the page state changes, the UI declaration changes accordingly, the property values of the DOM elements are reflected, and you are notified of the changes."<br />
+          There are two other situations in batonjs where the property values of DOM elements change.</p>
+
+          <p>The first is when batonjs is launched.<br />
+          Once batonjs is launched, a UI declaration is created based on the initial page state, which is then reflected on the already existing HTML page.<br />
+          At this time, if there is a difference between the properties derived from the existing HTML and the properties derived from the UI declaration, the property values will be updated.</p>
+
+          <p>The second is when batonjs creates a DOM element.<br />
+          The creation of DOM elements is discussed below, but batonjs may create DOM elements based on templates.<br />
+          At this time, if there is a difference between a property derived from the template and a property derived from the UI declaration, the property value will be changed.</p>
+
+          <p>The two cases above are somewhat special in the sense that <strong>the property value changes even though the page state or UI declaration has not changed</strong>; it is the first time batonjs encounters that DOM element, so it may not follow batonjs' rules.</p>
+
+          <p>batonjs allows for update monitoring in these situations.<br />
+          To do this, use "&&" instead of "&" when declaring update monitoring in the UI declaration.<br />
+          Update monitoring with "&" only monitors changes in property values that result from changes in page state. On the other hand, update monitoring with "&&" also monitors property value changes that are not directly related to changes in the page state.<br />
+          In batonjs, update monitoring with "&&" is called "strong update monitoring".</p>
+
+          <p>The author believes that there are not many situations where you would use strong update monitoring. However, it may be useful, for example, in situations where you want to start an animation as the page loads.<br />
+          The example below instructs the popup to launch with animation as the page loads.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">"#startup-popup": {
+  "class-is-open": true, 
+  "&&class-is-open": myTransition
+}</code></pre>
+        </section>
+
+        <section>
+          <h2 id="ui-decl-more">Other features of UI declaration</h2>
+
+          <p>The UI declaration has various features that make batonjs more useful. This section introduces those features.</p>
+
+          <h5>Event handler</h5>
+          <p>You can set event handlers in UI declarations instead of using <code>addEventListener</code>. The property name should be prefixed with "on" before the event type, such as <code>onclick</code>, <code>onchange</code>, etc.<br />
+          Despite its property name, batonjs internally uses <code>addEventListener</code> and <code>removeEventListener</code>.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">"#button": {
+  onclick: countUp
+}</code></pre>
+
+          <p>Remark<br />
+          If you write a function expression, such as <code>function () {...}</code> in the UI declaration, a function object will be created each time the show function is called. This is inefficient in most cases, so it is better to define event handler functions outside the show function as much as possible.</p>
+
+          <h5>Nesting UI declarations</h5>
+
+          <p>You can nest UI declarations.<br />
+          In such a case, if we were to call the outer declaration "parent" and the inner "child," the child CSS selector would be used starting from the DOM element extracted by the parent CSS selector.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">".parent": {
+  ".child": {...}, 
+  "data-index": ...
+}</code></pre>
+
+          <p>In the second line of the example above, the same DOM element is extracted as the CSS selector <code>.parent .child</code>.<br />
+          Also note that nested element declarations (<code>.child</code>) and property declarations (<code>data-index</code>) can be written side by side.</p>
+
+          <h5>Referencing DOM elements in UI declarations</h5>
+
+          <p>The right-hand side of the element declaration (the part of the block corresponding to the CSS selector on the left-hand side) can be a function.<br />
+          If this is a function, the function will be called with each DOM element extracted by the CSS selector as an argument.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  "option": (element, index) => ({
+    selected: state.selection === element.value
+  })
+}</code></pre>
+
+          <h5>class-* property and style-* property</h5>
+
+          <p>Property declarations have a convenient notation for class and style attributes.</p>
+
+          <p>If the property name starts with "class-", batonjs interprets this as specifying a single CSS class. The value of the property is a boolean value.<br />
+          For example, the declaration <code>"class-is-open": true</code> is the same as <code>classList.add("is-open")</code> in the sense. Conversely,<code>"class-is-open": false</code> would be <code>classList.remove("is-open")</code>.</p>
+
+          <p>Similarly, if the property name starts with "style-", batonjs interprets this as a single CSS style specification. The value of the property is a string.<br />
+          For example, the declaration <code>"style-font-size": "16px"</code> is the same in the sense as <code>font-size: 16px;</code> in the style attribute.</p>
+
+          <p>Remark</p>
+
+          <ul>
+            <li>Be careful not to set a numeric value for the style-* property. Bad example: <code>"style-font-size": 16</code>. This could cause malfunctions.</li>
+            <li>The behavior when class-* and class are used together in a UI declaration is unknown. The same is true when style-* and style are used together. Do not use them in such a way. It is acceptable to use the class and style attributes in HTML together with the class-* and style-* properties in the UI declaration.</li>
+          </ul>
+
+          <h5>Activating CSS transitions</h5>
+
+          <p>You can use the update monitoring mechanism to trigger CSS transitions. See <a href="csstransition.html">the CSS Transitions page</a> for details.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  "class-is-open": state.isAccordionOpen, 
+  "&class-is-open": cssTransition("transition", "size")
+}</code></pre>
+
+          <h5>Adding and Removing DOM Elements</h5>
+
+          <p>batonjs can also add and remove DOM elements when explicitly instructed. To do so, you tell batonjs which DOM elements are to be managed as children.<br />
+          From here on, we will refer to the DOM elements to be added and removed as "child" and their parent DOM elements as "parent".</p>
+
+          <p>Instruct the parent element to add and remove child elements by defining the <code>batonChildKeys</code> property and <code>batonChildTemplate</code> property in its UI declaration.<br />
+          <code>batonChildKeys</code> is <strong>an array of child element keys</strong>, indicating the existence and order of the child elements. <code>batonChildTemplate</code> is <strong>a template element used to create new child elements</strong>.<br />
+          The key is a string that identifies the child, must be immutable, and must not have duplicates among siblings. batonjs stores each key in the <strong>data-baton-key</strong> attribute of the child element.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  batonChildKeys: state.todos.map(todo => todo.id), 
+  batonChildTemplate: document.getElementById('todo-template')
+}</code></pre>
+
+          <p>batonjs recognizes the correct order of the child elements from the key array and adds, removes, and rearranges them so that the children are aligned accordingly in the DOM as well.</p>
+
+          <p>Remark<br />
+            If the child is pre-described in HTML, be sure to write the <code>data-baton-key</code> attribute on it.</p>
+
+          <h5>"mounted" property and update monitoring of lifecycle</h5>
+
+          <p>The previous chapter described the addition and removal of DOM elements. Using the update monitoring mechanism, we can monitor these lifecycle changes in child elements.<br />
+          To do so, set strong update monitoring on the <strong>mounted property</strong> of the child element.<br />
+          In the example below, CSS transitions are triggered when child elements are added or removed.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">{
+  "&&mounted": cssTransition("transition", "size")
+}</code></pre>
+
+          <p>The mounted property is <code>true</code> when the child element is added to the DOM tree and comes under batonjs control, and <code>false</code> when it leaves the control and just before it is removed from the DOM tree.</p>
+
+          <p>Be careful with the mounted property and the condition of the child element, as there can be a timing where the mounted property is <code>false</code> and not under batonjs' control, but still present in the DOM tree. This half state is necessary to perform CSS transitions on removal.</p>
+
+          <p>Update monitoring of the lifecycle using the mounted property can be used not only for directly added and removed children elements, but also for their descendants.</p>
+
+          <p>Remark<br />
+          The mounted property is a special property that is only valid within batonjs. Since it does not actually exist, you cannot access that property. The only thing you can do is detect updates.</p>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>baton</title>
+    <title>batonjs</title>
   </head>
   <body>
     <nav class="container-fluid" id="header"></nav>
@@ -14,19 +14,19 @@
         </hgroup>
 
         <ul>
-          <li>導入しやすい<br /><small>Node.js、webpack、Babel等のツールは不要。CDNでロードするだけで始められます</small></li>
-          <li>協調的<br /><small>DOMを専有しないので、HTMLを出力するPHPやDOM要素を直接変更するjQueryなどと共存できます</small></li>
-          <li>ワンストップ<br /><small>他のライブラリは不要。これだけで宣言的にUIの状態を管理できます</small></li>
-          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、少しの学習ですぐに使えるようになります</small></li>
-          <li>保守しやすい<br /><small>枠組みに沿って書けば自然とコードが整理されるので、保守がしやすくなります</small></li>
+          <li>Easy to introduce<br /><small>You don't need to use either Node.js, webpack or Babel, etc. Just load from CDN to get started</small></li>
+          <li>Collaborative<br /><small>It does not occupy DOM, so it can coexist with other libraries such as jQuery</small></li>
+          <li>One-stop<br /><small>You don't need any other libraries. This is all you need to declaratively manage UI state</small></li>
+          <li>Easy to learn<br /><small>You have less learning because we only add a few of our own concepts on top of the web standards</small></li>
+          <li>Maintenable<br /><small>Your code will be easier to maintain because it will be naturally organized if you code according to the framework</small></li>
         </ul>
 
         <nav id="toc" class="toc"></nav>
 
         <section>
-          <h2 id="overview">概要</h2>
+          <h2 id="overview">Overview</h2>
 
-          <p>簡単なクリックカウントを例に、batonjsを見てみましょう。</p>
+          <p>Let's look at batonjs with a simple click-counting example.</p>
 
           <pre class="line-numbers"><code class="language-html">&lt;html>
   &lt;body>
@@ -35,13 +35,13 @@
   &lt;/body>
 &lt;/html></code></pre>
 
-          <p>batonjsは既存のHTMLページにUI管理を後付けします。だからこの例でもHTMLは完全な形になっています。</p>
+          <p>batonjs retrofits UI management to an existing HTML page. So even in this example the HTML is in its complete form.</p>
 
-          <pre class="line-numbers"><code class="language-javascript">import {baton} from '../baton.js'
+          <pre class="line-numbers"><code class="language-javascript">import {baton} from '../asset/baton.esm.js'
 const state = {count:0}
 function show(state) {
   return {
-    "#counter": {
+    "#count": {
       innerText: state.count
     }
   }
@@ -51,69 +51,69 @@ document.getElementById('button').addEventListener('click', (ev) => {
 })
 const withState = baton(state, show, document.body)</code></pre>
 
-          <p>2行目でページの初期状態を定義しています。このオブジェクトは13行目でbatonを起動するのに使います。</p>
+          <p>At line 2, the initial state of the page is defined. This object is used to invoke batonjs in line 13.</p>
 
-          <p>3行目の<code>show</code>関数は、ページ状態をUIに反映させる方法を指示する関数です。最新のページ状態を受け取り、それを<strong>UI宣言</strong>に変換して返却します。UI宣言とは、どのUIがどうであるべきかを表現したオブジェクトです。<br />
-          5行目の<code>#counter</code>はCSSセレクターで、6行目の<code>innerText</code>はDOM要素のプロパティ名です。この2行で、どのDOM要素のどのプロパティをどんな値にするか、を確かに指示できていますね。</p>
+          <p>The <code>show</code> function on line 3 tells batonjs how to reflect the page state in the UI. It takes the latest page state, converts it to a <strong>UI declaration</strong> and returns it; a UI declaration is an object that represents what the UI should be.<br />
+          The <code>#count</code> in line 5 is the CSS selector and the <code>innerText</code> in line 6 is the property name of the DOM element. These two lines certainly tell which property of which DOM element should have what value.</p>
 
-          <p>11行目の<code>withState</code>はページ状態を更新するための関数です。<code>withState</code>に渡したコールバック関数が新しいページ状態を返却すると、<code>withState</code>はその状態をUIに反映させます。もちろん、その過程で<code>show</code>関数が使われます。</p>
+          <p>The <code>withState</code> function on line 11 is used to update the page state. When the callback function passed to <code>withState</code> returns a new page state, <code>withState</code> will reflect that state in the UI. Of course, the <code>show</code> function is used in the process.</p>
 
-          <p>13行目ではbatonjsを起動しています。batonjsを起動すると、状態を管理するための<code>withState</code>が返却されます。</p>
+          <p>At line 13, we invoke batonjs, which will return <code>withState</code> to manage the state we give it.</p>
 
-          <p>この例は、<a href="samples.html">ライブサンプル</a>に<a href="samples.html?no=1">実際に動くもの</a>があります。ライブサンプルには他にもたくさんの動くサンプルがあります。</p>
+          <p>There is <a href="samples.html?no=1">a real working example</a>] of this example in <a href="https://batonjs.com/en/samples.html">the live samples</a>. There are many more working live samples included in this repository.</p>
         </section>
 
         <section>
-          <h2 id="install">インストール</h2>
+          <h2 id="install">Installation</h2>
 
-          <h5>CDNから</h5>
+          <h5>From CDN</h5>
 
-          <p>batonjsはCDNから読み込むのがおすすめです。インストールは不要です。<br />
-          あらかじめCDNからダウンロードしておき、自サーバーに配置することもできます。</p>
+          <p>Installation of batonjs is not required; loading it from CDN is recommended as it is easier.<br />
+          You can also download it from CDN in advance and deploy it on your own server.</p>
 
-          <p>ESモジュール形式 <strong>TODO URL</strong></p>
+          <p>ES Module format<strong>TODO URL</strong></p>
 
           <pre class="line-numbers"><code class="language-html">&lt;script type="module">
 import {baton} from '../dist/baton.esm.js'
 &lt;/script></code></pre>
 
-          <p>UMD形式 <strong>TODO URL</strong></p>
+          <p>UMD format <strong>TODO URL</strong></p>
 
           <pre class="line-numbers"><code class="language-html">&lt;script src="../dist/baton.umd.js">&lt;/script>
 &lt;script>
 const baton = batonjs.baton
 &lt;/script></code></pre>
 
-          <h5>npmから</h5>
+          <h5>From npm</h5>
 
-          <p>npmでインストールすれば、バンドルしたりTree Shakingしたりする余地があります。<strong>TODO PACKAGE NAME</strong></p>
+          <p>If you install with npm, there is room for bundling and tree shaking. <strong>TODO PACKAGE NAME</strong></p>
 
           <pre class="line-numbers"><code class="language-shell">$ npm install batonjs</code></pre>
 
-          <p>ESモジュール形式</p>
+          <p>ES Module format</p>
 
           <pre class="line-numbers"><code class="language-javascript">import {baton} from 'batonjs'</code></pre>
 
-          <p>CommonJS形式</p>
+          <p>CommonJS format</p>
 
           <pre class="line-numbers"><code class="language-javascript">const {baton} = require('batonjs')</code></pre>
         </section>
 
         <section>
-          <h2 id="env">動作環境</h2>
+          <h2 id="env">Runtime Requirements</h2>
 
           <ul>
-            <li>Chrome最新版</li>
-            <li>Edge最新版</li>
-            <li>Firefox最新版</li>
-            <li>Chrome for Android最新版</li>
-            <li>iOS Safari最新版</li>
-            <li>Node.js v14以上</li>
+            <li>Chrome, latest</li>
+            <li>Edge, latest</li>
+            <li>Firefox, latest</li>
+            <li>Chrome for Android, latest</li>
+            <li>iOS Safari, latest</li>
+            <li>Node.js, v14 or greater</li>
           </ul>
         </section>
 
         <section>
-          <h2 id="license">ライセンス</h2>
+          <h2 id="license">License</h2>
 
           <p>MIT</p>
         </section>

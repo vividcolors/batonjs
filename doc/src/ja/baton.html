@@ -93,7 +93,7 @@
           また、返却値が<code>null</code>か<code>undefined</code>だった場合も、ページ状態は変わっていないとbatonjsは判断します。</p>
           
           <p>batonjsを1つのページ内で複数起動する場合、<code>withState</code>は起動するごとに別の値です。<br />
-          <code>withState</code>batonjsを起動する関数<code>baton</code>の返却値として取得できます。</p>
+          <code>withState</code>はbatonjsを起動する関数<code>baton</code>の返却値として取得できます。</p>
 
           <h5>例</h5>
           <pre class="line-numbers"><code class="language-javascript">myButton.addEventListener(ev => {
@@ -154,7 +154,7 @@
     innerText: state.count
   }
 })
-const withState = baton(state, show)</code></pre>
+const withState = baton(state, show, document.body)</code></pre>
 
           <h5>パラメーター</h5>
           <figure>
@@ -205,10 +205,10 @@ const withState = baton(state, show)</code></pre>
           <p>DOM要素のプロパティ値が変わったときにコールバック関数を呼んでもらうことができます。batonjsではこれを<strong>更新監視</strong>と呼んでいます。<br />
           更新監視はUI宣言の中に書きます。監視対象とするプロパティの名前の前に"&"を付けたものを左辺とし、右辺にはコールバック関数を書きます。</p>
 
-          <pre class="line-numbers"><code class="language-javascript">const handleModalOpen = (element, propertyName, newValue, oldValue, cleanup) => {...}
+          <pre class="line-numbers"><code class="language-javascript">const handleChecked = (element, propertyName, newValue, oldValue, cleanup) => {...}
 const show = (state) => ({
-  "class-is-open": state.modalOpen, 
-  "&class-is-open": handleModalOpen
+  checked: state.checkboxChecked, 
+  "&checked": handleChecked
 })</code></pre>
 
           <h5>パラメーター</h5>
@@ -360,7 +360,8 @@ const show = (state) => ({
           <p>更新監視の仕組みを使ってCSSトランジションを起動することができます。詳細は<a href="csstransition.html">CSSトランジションページ</a>を参照してください。</p>
 
           <pre class="line-numbers"><code class="language-javascript">{
-  "class-is-open": cssTransition("transition", "size")
+  "class-is-open": state.isAccordionOpen, 
+  "&class-is-open": cssTransition("transition", "size")
 }</code></pre>
 
           <h5>DOM要素の追加と削除</h5>
