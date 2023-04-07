@@ -49,7 +49,7 @@ const withState = baton(state, show, document.body)
 
 13行目ではbatonjsを起動しています。batonjsを起動すると、状態を管理するための`withState`が返却されます。
 
-この例は、[ライブサンプル](https://batonjs.com/ja/samples.html)に[実際に動くもの](https://batonjs.com/ja/samples.html?no=1)があります。このリポジトリに含まれているライブサンプルには他にもたくさんの動くサンプルがあります。
+この例は、[ライブサンプル](https://batonjs.com/ja/samples.html)に[実際に動くもの](https://batonjs.com/ja/samples.html?no=1)があります。
 
 ### もっと知るには
 
