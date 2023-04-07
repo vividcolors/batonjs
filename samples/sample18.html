@@ -14,7 +14,7 @@
       <li><span></span><button type="button" class="removeButton">Remove</button></li>
     </template>
     <script type="module">
-      import {baton, insert, remove} from '../asset/baton.esm.js'
+      import {baton, insert, remove, update} from '../asset/baton.esm.js'
       const state = {items:["1"]}
       const onremove = (ev) => {
         const index = ev.target.dataset.index
