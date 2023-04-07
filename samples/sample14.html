@@ -7,7 +7,7 @@
   </head>
   <body>
     <div class="container">
-      <ul class="list-group"></ul>
+      <ul class="list-group posts"></ul>
     </div>
     <div class="dimmer" style="position:fixed;top:0;bottom:0;left:0;right:0;z-index:100;transition:opacity 0.2s linear;opacity:0;background:rgba(255,255,255,0.4);">
       <div class="position-absolute top-50 start-50 translate-middle">
@@ -64,30 +64,59 @@
     </template>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
     <script type="module">
-      // https://jsonplaceholder.typicode.com/
-      import {baton} from '../asset/baton.esm.js'
-      const backendApi = {
-        getPosts: async () => {
-          await new Promise((resolve) => {
-            setTimeout(() => {resolve()}, 1000)
-          })
-          return await fetch('https://jsonplaceholder.typicode.com/posts').then(response => response.json())
-        }, 
-        putPost: async (post) => {
-          await fetch('https://jsonplaceholder.typicode.com/posts/' + post.id, {
-            method: 'PUT',
-            body: JSON.stringify(post),
-            headers: {
-              'Content-type': 'application/json; charset=UTF-8',
-            },
-          })
-        }, 
-        deletePost: async (postId) => {
-          await fetch('https://jsonplaceholder.typicode.com/posts/' + postId, {
-            method: 'DELETE'
-          })
+      import {baton, insert, remove, update} from '../asset/baton.esm.js'
+
+      /**
+       * Backend API; depending on no layer
+       * Powered by JSONPlaceholder; https://jsonplaceholder.typicode.com/
+       */
+      const createBackendApi = () => {
+        let posts = null
+        const getPostsRaw = async () => {
+            await new Promise((resolve) => {
+              setTimeout(() => {resolve()}, 1000)
+            })
+            return await fetch('https://jsonplaceholder.typicode.com/posts').then(response => response.json())
+        }
+        return {
+          getPosts: async () => {
+            if (! posts) {
+              posts = await getPostsRaw()
+            }
+            return posts
+          }, 
+          putPost: async (post) => {
+            await fetch('https://jsonplaceholder.typicode.com/posts/' + post.id, {  // will always success without effect
+              method: 'PUT',
+              body: JSON.stringify(post),
+              headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+              },
+            })
+            if (posts) {
+              const i = posts.findIndex(p => p.id == post.id)
+              if (i !== -1) {
+                posts = update(i, post, posts)
+              }
+            }
+          }, 
+          deletePost: async (postId) => {
+            await fetch('https://jsonplaceholder.typicode.com/posts/' + postId, {  // will always success without effect
+              method: 'DELETE'
+            })
+            if (posts) {
+              const i = posts.findIndex(p => p.id == postId)
+              if (i !== -1) {
+                posts = remove(i, posts)
+              }
+            }
+          }
         }
       }
+
+      /**
+       * Bootstrap connector; depending on no layer
+       */
       const bootstrapActions = {
         openModal: (el, _name, newValue, oldValue, cleanup) => {
           const instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el, {backdrop:"static", keyboard:false})
@@ -114,70 +143,64 @@
           if (cleanup) cleanup()
         }
       }
+
+      /**
+       * Domain Layer; depending on no layer
+       */
       const state = {
         form: null, 
         loadingLevel: 0, 
         posts: [], 
         notification: null  // null or `${timestamp}:${message}`
       }
-      const actions = {
-        load: async () => {
-          withState((state) => ({...state, loadingLevel:state.loadingLevel + 1}))
-          const lis = document.querySelector('.list-group')
-          const posts = await backendApi.getPosts()
-          withState((state) => ({...state, loadingLevel:state.loadingLevel - 1, posts}))
-        }, 
-        onedit: (ev) => {
-          const idx = ev.currentTarget.closest('.post').dataset.index
-          withState(state => {
-            const post = {...state.posts[idx]}
-            return {...state, form:post}
-          })
-        }, 
-        ondismiss: (ev) => {
-          withState(state => ({...state, form:null}))
-        }, 
-        oncommit: async (ev) => {
-          let form = null
-          withState((state) => {
-            form = state.form
-            return {...state, form:null, loadingLevel:state.loadingLevel + 1}
-          })
-          await backendApi.putPost(form)
-          const posts = await backendApi.getPosts()
-          const notification = `${Date.now()}:Post (ID=${form.id}) was updated.`
-          withState((state) => {
-            return {...state, posts, notification, loadingLevel:state.loadingLevel - 1}
-          })
-        }, 
-        ondelete: async (ev) => {
-          const postEl = ev.currentTarget.closest('.post')
-          const idx = postEl.dataset.index
-          const postId = postEl.querySelector('.id').textContent
-          if (! confirm(`Post (ID=${postId}) will be deleted. Are you sure?`)) {
-            return
+      const createActions = (backendApi, withState) => {  // We inject backendApi into the Domain layer.
+        const actions = {
+          load: async () => {
+            withState(state => update("loadingLevel", state.loadingLevel + 1, state))
+            const posts = await backendApi.getPosts()
+            withState(state => update("loadingLevel", state.loadingLevel - 1, "posts", posts, state))
+          }, 
+          onedit: (ev) => {
+            const idx = +ev.currentTarget.closest('.post').dataset.index
+            withState(state => update("form", state.posts[idx], state))
+          }, 
+          ondismiss: (ev) => {
+            withState(state => update("form", null, state))
+          }, 
+          oncommit: async (ev) => {
+            let form = null
+            withState(state => {
+              form = state.form
+              return update("form", null, "loadingLevel", state.loadingLevel + 1, state)
+            })
+            await backendApi.putPost(form)
+            const posts = await backendApi.getPosts()
+            const notification = `${Date.now()}:Post (ID=${form.id}) was updated.`
+            withState(state => update("posts", posts, "notification", notification, "loadingLevel", state.loadingLevel - 1, state))
+          }, 
+          ondelete: async (ev) => {
+            const postId = ev.currentTarget.closest('.post').querySelector('.id').textContent
+            if (! confirm(`Post (ID=${postId}) will be deleted. Are you sure?`)) {
+              return
+            }
+            withState(state => update("loadingLevel", state.loadingLevel + 1, state))
+            await backendApi.deletePost(postId)
+            const posts = await backendApi.getPosts()
+            const notification = `${Date.now()}:Post (ID=${postId}) was deleted.`
+            withState(state => update("posts", posts, "notification", notification, "loadingLevel", state.loadingLevel - 1, state))
+          }, 
+          oninput: (ev) => {
+            const name = ev.currentTarget.name
+            const value = ev.currentTarget.value
+            withState(state => update("form", update(name, value, state.form), state))
           }
-          let post = null
-          withState((state => {
-            post = state.posts[idx]
-            return {...state, loadingLevel:state.loadingLevel + 1}
-          }))
-          await backendApi.deletePost(post.id)
-          const posts = await backendApi.getPosts()
-          const notification = `${Date.now()}:Post (ID=${post.id}) was deleted.`
-          withState((state) => {
-            return {...state, posts, notification, loadingLevel:state.loadingLevel - 1}
-          })
-        }, 
-        oninput: (ev) => {
-          const name = ev.currentTarget.name
-          const value = ev.currentTarget.value
-          withState((state) => {
-            const form = {...state.form, [name]:value}
-            return {...state, form}
-          })
         }
+        return actions
       }
+
+      /**
+       * Presentation Layer; depending on Backend API, Bootstrap connector and Domain layer
+       */
       const show = (state) => ({
         ".dimmer": {
           "style-opacity": state.loadingLevel > 0 ? 1 : 0, 
@@ -209,29 +232,23 @@
           "data-notification": state.notification, 
           "&data-notification": bootstrapActions.openToast
         }, 
-        ".post": (el) => {
-          const idx = el.dataset.index
-          const enabled = (idx < state.posts.length)
-          const post = enabled ? state.posts[idx] : null
-          return {
-            "class-d-none": !enabled, 
-            "class-d-block": enabled, 
-            ".id": {textContent: enabled ? post.id : ""}, 
-            ".title": {textContent: enabled ? post.title : ""}, 
+        ".posts": {
+          batonChildKeys: state.posts.map(p => p.id), 
+          batonChildTemplate: document.getElementById('post-tpl'), 
+          // Remark that posts in HTML have already sorted as state.posts. i.e., `i' also indexes state.posts.
+          //   See: https://stackoverflow.com/questions/8203770/using-queryselectorall-is-the-result-returned-by-the-method-ordered
+          ".post": (el, i) => ({
+            ".id": {textContent: state.posts[i].id}, 
+            ".title": {textContent: state.posts[i].title}, 
             ".edit": {onclick:actions.onedit}, 
-            ".delete": {onclick:actions.ondelete}
-          }
+            ".delete": {onclick:actions.ondelete}, 
+            "data-index": "" + i
+          })
         }
       })
-      const lis = document.querySelector('.list-group')
-      const tpl = document.getElementById('post-tpl')
-      for (let i = 0; i < 100; i++) {
-        const li = tpl.content.cloneNode(true).firstElementChild
-        li.dataset.index = i
-        lis.appendChild(li)
-      }
       const withState = baton(state, show)
-      actions.load()
+      const actions = createActions(createBackendApi(), withState)
+      actions.load()  // Load posts on page load
     </script>
   </body>
 </html>
