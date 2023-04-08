@@ -1,0 +1,232 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>CSS Transition</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>CSS Transition</h1>
+          <h4>This is a mechanism to trigger CSS transitions when property values change.</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="csstransition">cssTransition</h2>
+
+          <p>The cssTransition function creates a function that invokes a CSS transition. The created function can be used as a callback for property update monitoring.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const transition = cssTransition("transition")
+const show = (state) => ({
+  ".modal": {
+    "class-is-open": state.modalIsOpen, 
+    "&class-is-open": transition
+  }
+})</code></pre>
+
+          <pre class="line-numbers"><code class="language-css">.modal.is-open {
+  display: block;
+  opacity: 1;
+}
+.modal.transition-enter {  /* when modal open */
+  opacity: 0;
+  display: block;
+}
+.modal.transition-enter-active {
+  transition: opacity 0.2s;
+  opacity: 1;
+}
+.modal.transition-exit {  /* when modal close */
+  display: block;
+}
+.modal.transition-exit-active {
+  transition: opacity 0.2s;
+  opacity: 0;
+}</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>mandatory</td>
+                  <td>The base string of the CSS class to be assigned. For example, if this string is "transition", the CSS class name would be "transition-enter", "transition-exit", etc.</td>
+                </tr>
+                <tr>
+                  <td>options</td>
+                  <td>object | "size" | "details" | "dropdown"</td>
+                  <td><code>{}</code></td>
+                  <td>Specify options by object that extend the behavior of the CSS transitions.<br />
+                  You can also specify a string, in which case you specify the built-in behavior (called a "preset"). There are three presets: "size", "details" and "dropdown". See below.</td>
+                </tr>
+                <tr>
+                  <td>options.target</td>
+                  <td>string</td>
+                  <td>":scope"</td>
+                  <td>Specify a CSS selector for the DOM element to which the CSS class is to be assigned. The default is the DOM element itself that is under update monitoring.<br />
+                    The extraction of DOM elements by the selector starts from the DOM element that is the target of the update monitoring.</td>
+                </tr>
+                <tr>
+                  <td>options.timeout</td>
+                  <td>number</td>
+                  <td>10000</td>
+                  <td>Specifies the time in milliseconds (1/1000 of a second) before the CSS transition is forced to end. Default is 10 seconds.<br />
+                  Normally, CSS transitions are terminated when the transitionend event is received. However, in case this does not happen for some reason, there is a force termination mechanism. You can specify here how many seconds to wait for the forced termination.</td>
+                </tr>
+                <tr>
+                  <td>options.onstart</td>
+                  <td>function</td>
+                  <td><code>null</code></td>
+                  <td>A callback called just before starting a CSS transition. The parameters and return values of the callback are the same as those of the update monitoring.</td>
+                </tr>
+                <tr>
+                  <td>options.onfinish</td>
+                  <td>function</td>
+                  <td><code>null</code></td>
+                  <td>A callback called just before the end of a CSS transition. The parameters and return values of the callback are the same as those of the update monitor.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>fn</td>
+                  <td>function</td>
+                  <td>Function that, when called, activates CSS transitions. Can be used as a callback for update monitoring.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="mechanism">How CSS transitions work</h2>
+
+          <p>The CSS transition mechanism of batonjs is built in reference to <a href="https://reactcommunity.org/react-transition-group/" target="_blank">React Transition Group</a>.<br />
+          The cssTransition function performs CSS class operations on DOM elements in the following steps. Define the appropriate CSS for each class so that the transition will be executed.</p>
+
+          <ol>
+            <li>Add <code>transition-enter-before</code><br /><small>After this, the onstart callback is called.</small></li>
+            <li>Remove <code>transition-enter-before</code>, Add <code>transition-enter</code><br /><small>After this, a small amount of time is reserved to make the browser render the DOM element.</small></li>
+            <li>Add <code>transition-enter-active</code><br /><small>At this point, the CSS transition begins, and when the <code>transitionend</code> event is received, proceeds to the next step.</small></li>
+            <li>Remove <code>transition-enter-active</code> and <code>transition-enter</code><br /><small>After this, the onfinish callback is called.</small></li>
+          </ol>
+
+          <p>You can use each class as follows.</p>
+          
+          <p>In the <code>transition-enter</code> class, define the style at the start of the transition. In the case of a modal or other DOM element with a <code>display</code> property of <code>none</code>, this is where you change it to <code>block</code>.</p>
+
+          <p>In the <code>transition-enter-active</code> class, define the style for when the transition ends. In conjunction with the previous step, <code>transition-enter-active</code> is added after <code>transition-enter</code>. By adding the classes in this order, batonjs activates the CSS transition.<br />
+          It is here that you define the <code>transition</code> property.</p>
+
+          <p>The <code>transition-enter-before</code> class is a class that is added in the preparatory stage before starting a transition. In some UIs, it is necessary to change the style for a moment before starting a transition, and then do some processing with that style. <code>transition-enter-before</code> is a class provided for such situations.</p>
+
+          <p>The class name given, such as "transition-enter", varies depending on the argument.<br />
+          The "transition" part is the string passed as the first argument to the cssTransition function.<br />
+          The "enter" part becomes "enter" when the third argument (newValue) of the update monitoring callback is true (truthy) and "exit" when it is false (falsy). For example, if the property to be monitored is open, "enter" will be given if the open property is true, and "exit" will be given if it is false.<br />
+          Thus, the class name also changes depending on how the property value has changed, so that a different animation can be used for each.</p>
+        </section>
+
+        <section>
+          <h2 id="size-preset">size preset</h2>
+
+          <p>The trouble with CSS transitions is when you want to change the height or width, because you have to measure the size of the DOM element in advance with javascript and then make the transition.</p>
+
+          <p>With the size preset, this can be automated.<br />
+          The size preset will measure the size of the DOM element when it is displayed and set it to the style property as CSS custom properties.</p>
+
+          <p>The size preset defines following two CSS custom properties.</p>
+
+          <dl>
+            <dt><code>--width</code></dt>
+            <dd>Width of the target DOM element</dd>
+            <dt><code>--height</code></dt>
+            <dd>Height of the target DOM element</dd>
+          </dl>
+
+          <p>The size preset measures the size of the DOM element in the <code>onstart</code> callback. The user should ensure that the DOM element is visible when the <code>onstart</code> callback is called.<br />
+          To do so, use the <code>transition-enter-before</code> class.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const transition = cssTransition("transition", "size")  // specifies size preset
+const show = (state) => ({
+  ".modal": {
+    "class-is-open": state.modalIsOpen, 
+    "&class-is-open": transition
+  }
+})</code></pre>
+
+          <pre class="line-numbers"><code class="language-css">.modal.is-open, 
+.modal.transition-enter-before {  /* We need this line to measure the size. */
+  display: block;
+  opacity: 1;
+}
+.modal.transition-enter {  /* on modal open */
+  opacity: 0;
+  height: 0;
+  display: block;
+}
+.modal.transition-enter-active {
+  transition: opacity 0.2s, height 0.2s;
+  opacity: 1;
+  height: var(--height);  /* using --height */
+}
+.modal.transition-exit {  /* on modal close */
+  display: block;
+  height: var(--height);  /* using --height */
+}
+.modal.transition-exit-active {
+  transition: opacity 0.2s, height 0.2s;
+  opacity: 0;
+  height: 0;
+}</code></pre>
+        </section>
+
+        <section>
+          <h2 id="details-preset">details preset</h2>
+
+          <p>The details preset is used to animate the opening and closing of details/summary element.<br />
+          The element to be animated is the second child of the details element; since the first child is a summary, the second is the body part that will be invisible when closed.</p>
+
+          <p>The details preset defines custom properties by measuring the size of the body part, just like the size preset. Therefore, users of the details preset need to define CSS transitions for the body part.</p>
+
+          <p>An example of the use of the details preset can be found in <a href="samples.html?no=15">Sample "jQuery's slideUp/Down"</a>.</p>
+        </section>
+
+        <section>
+          <h2 id="dropdown-preset">dropdown preset</h2>
+
+          <p>A dropdown preset is a preset for defining a style of dropdown.<br />
+          It will decide where to display the dropdown, measure the size, and set it to a custom property.</p>
+
+          <p>An example of the use of the dropdown preset can be found in <a href="samples.html?no=17">Sample "Dropdown"</a>.</p>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

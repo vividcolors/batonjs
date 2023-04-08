@@ -1,0 +1,342 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Data processing</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>Data processing</h1>
+          <h4>Data processing functions helping you write concise programs in batonjs. These are bundled with batonjs.</h4>
+        </hgroup>
+
+        <p>Most of the functions introduced on this page manipulate collections (objects or arrays), such as adding or removing elements.<br />
+        As mentioned in baton core, batonjs uses <code>===</code> to determine if the page state has changed.<br />
+        This means that when you update the properties of an object or add/remove elements from an array, you need to make sure that you have a new collection on hand.<br />
+        The functions presented on this page meet that requirement and are therefore suitable for use withState.</p>
+
+        <p>Note that the functions introduced here treat arrays as lists and objects as "maps keyed by strings".<br />
+        A list is a sequence of elements packed from beginning to end.</p>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="type-of">typeOf</h2>
+
+          <p>Examines the type of the value.<br />
+          This is almost the same as <code>typeof</code> operator. But the difference is that it distinguishes nulls and arrays from objects.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">typeOf(null)  // === "null"
+typeOf([])  // === "array"
+typeOf({})  // === "object"
+typeOf(0)  // === "number"
+typeOf("")  // === "string"
+typeOf(false)  // === "boolean"
+typeOf(undefined)  // === "undefined"
+typeof(() => 0)  // === "function"</code></pre>
+          
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>value</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>Value whose type is to be examined</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>type</td>
+                  <td>string</td>
+                  <td>String representing the type</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="insert">insert</h2>
+
+          <p>Create a collection (array or object) with an element added.<br />
+            If the collection is an object, the element is not overwritten.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">insert(0, "a", [0, 1, 2])  // --> ["a", 0, 1, 2]
+insert(3, "a", [0, 1, 2])  // --> [0, 1, 2, "a"]
+insert("a", "a", {x: 1, y: 2})  // --> {x: 1, y: 2, a: "a"}
+insert("x", "x", {x: 1, y: 2})  // --> error</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>index</td>
+                  <td>number|string</td>
+                  <td>mandatory</td>
+                  <td>The position at which the element is to be added. If the collection of the third argument is an array, an integer that will be the index of the array; if it is an object, a string that will be the property name.</td>
+                </tr>
+                <tr>
+                  <td>value</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>An element to be added to the collection</td>
+                </tr>
+                <tr>
+                  <td>collection</td>
+                  <td>array|object</td>
+                  <td>mandatory</td>
+                  <td>Collection to add an element</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>collection</td>
+                  <td>array|object</td>
+                  <td>Collection with element added</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="remove">remove</h2>
+
+          <p>Creates a collection (array or object) with an element removed.<br />
+          If an element to be deleted is not found, an error is thrown.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">remove(0, [0, 1, 2])  // --> [1, 2]
+remove(3, [0, 1, 2])  // --> error
+remove("x", {x: 1, y: 2})  // --> {y: 2}
+remove("a", {x: 1, y: 2})  // --> error</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>index</td>
+                  <td>number|string</td>
+                  <td>mandatory</td>
+                  <td>The position of the element to be deleted. If the collection of the second argument is an array, an integer that will be the array index; if it is an object, a string that will be the property name.</td>
+                </tr>
+                <tr>
+                  <td>collection</td>
+                  <td>array|object</td>
+                  <td>mandatory</td>
+                  <td>Collection to delete an element</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>collection</td>
+                  <td>array|object</td>
+                  <td>Collection with element deleted</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="update">update</h2>
+
+          <p>Create a collection (array or object) with elements overwritten.<br />
+          Multiple elements can be overwritten at once.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">update(0, "a", [0, 1, 2])  // --> ["a", 1, 2]
+update(0, "a", 2, "b", [0, 1, 2])  // --> ["a", 1, "b"]
+update(3, "a", [0, 1, 2])  // --> error
+update("x", "a", {x: 0, y: 1, z: 2})  // --> {x: "a", y: 1, z: 2}
+update("x", "a", "z", "b", {x: 0, y: 1, z: 2})  // --> {x: "a", y: 1, z: "b"}
+update("a", "a", {x: 0, y: 1, z: 2})  // --> error</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>index</td>
+                  <td>number|string</td>
+                  <td>mandatory</td>
+                  <td>The position at which the element is to be overwritten. If the collection of the last argument is an array, the integer that will be the array index; if it is an object, the string that will be the property name.</td>
+                </tr>
+                <tr>
+                  <td>value</td>
+                  <td>any</td>
+                  <td>mandatory</td>
+                  <td>An element to be added to the collection. You can specify multiple key/value pairs.</td>
+                </tr>
+                <tr>
+                  <td>collection</td>
+                  <td>array|object</td>
+                  <td>mandatory</td>
+                  <td>Collection to be overwritten</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>collection</td>
+                  <td>array|object</td>
+                  <td>Collection whose elements are overwritten</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section>
+          <h2 id="remove">sort</h2>
+
+          <p>Create an array with the elements in a different order.<br />
+          The sorting specification is the same as the javascript standard <a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/sort">Array#sort</a>. It is a <a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#%E3%82%BD%E3%83%BC%E3%83%88%E3%81%AE%E5%AE%89%E5%AE%9A%E6%80%A7" target="_blank">stable sort</a>.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">const less = (a, b) => (a - b)
+sort(less, [5, 2, 4, 1, 3])  // --> [1, 2, 3, 4, 5]</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>compare</td>
+                  <td>function</td>
+                  <td>mandatory</td>
+                  <td>A function that compares two elements <code>a</code> and <code>b</code>, and returns a numeric value according to the result.<br />
+                  If <code>a</code> precedes <code>b</code>, return a number less than 0<br />
+                  If the order of <code>a</code> and <code>b</code> is the same (no reordering), return 0<br />
+                  If <code>a</code> is subsequent to <code>b</code>, return a number greater than 0</td>
+                </tr>
+                <tr>
+                  <td>collection</td>
+                  <td>array</td>
+                  <td>mandatory</td>
+                  <td>Array to be sorted</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>collection</td>
+                  <td>array</td>
+                  <td>Array that has been sorted</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

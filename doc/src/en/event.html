@@ -1,0 +1,129 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Event filter</title>
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>Event filter</h1>
+          <h4>A group of functions that filter the execution of event handlers. These are bundled with batonjs.</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="debounce">debounce</h2>
+
+          <p>It delays the execution of a function for a specified time, and if the function is called again during the wait, it delays the execution further starting from that point. As a result, only the last call in a sequence of function calls will be executed.</p>
+
+          <p>Debounce can be useful in improving program performance when processing resize events, mouse move events, and so on. These events occur in sequence, but not all of them need to be processed, and in many cases it is sufficient to process only the last one.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">element.addEventListener("resize", debounce(myEventHandler, 300))</code></pre>
+          
+          <h5>Parameters</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">name</th>
+                <th scope="col">type</th>
+                <th scope="col">default</th>
+                <th scope="col" class="description-column">description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>function</td>
+                <td>mandatory</td>
+                <td>Original function. An original function is a function that takes any number of arguments and does not return a value.</td>
+              </tr>
+              <tr>
+                <td>delay</td>
+                <td>number</td>
+                <td>mandatory</td>
+                <td>Specify the time in milliseconds (1/1000 of a second) to delay the execution of the function.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h5>Return Value</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">name</th>
+                <th scope="col">type</th>
+                <th scope="col" class="description-column">description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>function</td>
+                <td>Function to which the filter is applied</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2 id="throttle">throttle</h2>
+
+          <p>Adjusts the execution of the function so that it occurs at most once within the specified interval.</p>
+
+          <p>throttle may help improve program performance in handling scrolling events etc. This is because these events occur in rapid succession, but processing all of them may slow down program execution too much.</p>
+
+          <pre class="line-numbers"><code class="language-javascript">element.addEventListener("scroll", throttle(myEventHandler, 300))</code></pre>
+
+          <h5>Parameters</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">name</th>
+                <th scope="col">type</th>
+                <th scope="col">default</th>
+                <th scope="col" class="description-column">description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>function</td>
+                <td>mandatory</td>
+                <td>Original function. An original function is a function that takes any number of arguments and does not return a value.</td>
+              </tr>
+              <tr>
+                <td>interval</td>
+                <td>number</td>
+                <td>mandatory</td>
+                <td>Specify the function execution interval in milliseconds (1/1000th of a second).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h5>Return Value</h5>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">name</th>
+                <th scope="col">type</th>
+                <th scope="col" class="description-column">description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>fn</td>
+                <td>function</td>
+                <td>Function to which the filter is applied</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>
