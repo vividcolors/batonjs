@@ -84,7 +84,7 @@
           "#todos": {
             batonChildKeys: state.todos.map(todo => ""+todo.id), 
             batonChildTemplate: document.getElementById('template'), 
-            li: (el, i) => {
+            ":scope > li": (el, i) => {
               const todo = state.todos[i]
               return {
                 "data-index": "" + i, 
@@ -115,7 +115,7 @@
               onchange: onInput, 
               value: state.form.when
             }, 
-            "button": {
+            "*|button": {
               onclick: onAppend
             }
           }

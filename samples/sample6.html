@@ -19,10 +19,10 @@
       import {baton} from '../asset/baton.esm.js'
       const state = {count:0}
       const show = (state) => ({
-        "li": (el, i) => {
+        "*|li": (el, i) => {
           const k = +(el.dataset.k)
           return {
-            "span" : {
+            "*|span" : {
               innerText: state.count * k
             }
           }

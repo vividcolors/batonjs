@@ -196,6 +196,16 @@ const withState = baton(state, show, document.body)</code></pre>
               </tbody>
             </table>
           </figure>
+
+          <h5>Discrimination between element and property declarations</h5>
+          <p>batonjs determines the type of declaration only by its left-hand side. The left-hand side of an element declaration is the CSS selector and that of a property declaration is the property name.<br />
+          So how is it determined if the left-hand side is <code>option</code>? The answer is a property declaration.<br />
+          batonjs determines that a left-hand side is a property declaration if it consists of a sequence of alphanumeric characters and hyphens/underscores. Therefore, <code>option</code> consisting only of alphanumeric characters is determined to be a property declaration.</p>
+
+          <p>Conversely, what if you want to write a UI declaration for an HTML option element? If you simply write <code>"option"</code> as a CSS selector, it will be interpreted as a property declaration. So you need to write a CSS selector that has the same meaning but is not interpreted as a property declaration.<br />
+          CSS selectors that meet this requirement include: <code>"option:not(.phantom-class)"</code>, <code>"option:defined"</code>, <code>"*|option"</code>, <code>"option "</code></p>
+
+          <p>The author recommends using the third one with namespace (<code>"*|option"</code>). I like this one because it is short, has no unnecessary words, and is easy to identify as a CSS selector.</p>
         </section>
 
         <section>
@@ -332,7 +342,7 @@ const show = (state) => ({
           If this is a function, the function will be called with each DOM element extracted by the CSS selector as an argument.</p>
 
           <pre class="line-numbers"><code class="language-javascript">{
-  "option": (element, index) => ({
+  ".option": (element, index) => ({
     selected: state.selection === element.value
   })
 }</code></pre>

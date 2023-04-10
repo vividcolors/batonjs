@@ -48,9 +48,9 @@
               value: state.sex == "Female"
             }
         }, 
-        "select": {
+        "*|select": {
             onchange: onchange, 
-            "option": (el) => ({
+            "*|option": (el) => ({
               selected: el.value == state.age
             })
         }, 

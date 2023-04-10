@@ -47,10 +47,10 @@
         withState(state => ({openPart:ev.target.parentNode.dataset.name}))
       }
       const show = (state) => ({
-        details: (el) => ({
+        "*|details": (el) => ({
           open: el.dataset.name == state.openPart, 
           "&open": onopen, 
-          'summary': {
+          '*|summary': {
             "onclick": switchPart
           }
         })

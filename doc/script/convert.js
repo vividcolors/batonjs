@@ -7,8 +7,8 @@ import cpx from 'cpx'
 
 const show = (config) => {
   return {
-    title: (el) => ({innerHTML: el.innerHTML + ' | ' + config.siteTitle}), 
-    head: (el) => ({innerHTML: el.innerHTML + config.head}), 
+    "title ": (el) => ({innerHTML: el.innerHTML + ' | ' + config.siteTitle}), 
+    "head ": (el) => ({innerHTML: el.innerHTML + config.head}), 
     "#header": {innerHTML: config.header}, 
     "#sidebar": {innerHTML: config.sidebar}, 
     "#footer": {innerHTML: config.footer}, 

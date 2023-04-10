@@ -4,6 +4,7 @@ const LC_MOUNTED_INDIRECTLY = "MI"
 const LC_UNMOUNTED_DIRECTLY = "UD"
 const LC_UNMOUNTED_INDIRECTLY = "UI"
 
+
 export const baton = (state, show, baseEl = null) => {
   const lifecycles = new Map()
   let reflectionScheduled = false
@@ -19,13 +20,15 @@ export const baton = (state, show, baseEl = null) => {
   }
 
   const declType = (name, value) => {
+    // property: [a-zA-Z_-]*
+    // update monitor: &*, 
+    // element: others
     if (name[0] === '&') {
       return "observer"
-    } else if ((value !== null && !Array.isArray(value) && typeof value == "object") || 
-               (typeof value == "function" && !(name[0] == 'o' && name[1] == 'n') && name[0] != '&')) {
-      return "element"
-    } else {
+    } else if (/^[A-Za-z0-9_-]+$/.test(name)) {
       return "property"
+    } else {
+      return "element"
     }
   }
 

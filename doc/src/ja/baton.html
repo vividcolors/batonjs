@@ -197,6 +197,16 @@ const withState = baton(state, show, document.body)</code></pre>
               </tbody>
             </table>
           </figure>
+
+          <h5>要素宣言とプロパティ宣言の判別</h5>
+          <p>batonjsは宣言の種類をその左辺だけで判断します。要素宣言の左辺はCSSセレクターで、プロパティ宣言の左辺はプロパティ名です。<br />
+          では、左辺が<code>option</code>の場合はどう判別されるのでしょうか。正解はプロパティ宣言です。<br />
+          batonjsは、左辺が英数字およびハイフン・アンダースコアの羅列の場合にはプロパティ宣言であると判断します。だから、英字だけで構成されている<code>option</code>はプロパティ宣言と判断されるのです。</p>
+
+          <p>では逆に、HTMLオプション要素に対してUI宣言を書きたい場合はどうすればいいでしょう。シンプルに<code>option</code>とCSSセレクターを書くとプロパティ宣言と解釈されてしまいますので、同じ意味を持つがプロパティ宣言と解釈されないCSSセレクターを書く必要があります。<br />
+          この要件を満たすCSSセレクターは次のようなものがあります：<code>"option:not(.phantom-class)"</code>、<code>"option:defined"</code>、<code>"*|option"</code>、<code>"option "</code></p>
+
+          <p>筆者のオススメは、3番目の名前空間を使ったもの（<code>"*|option"</code>）です。これは短く不要な単語が出現せず、しかもCSSセレクターであることも分かりやすいのが気に入っています。</p>
         </section>
 
         <section>
@@ -333,7 +343,7 @@ const show = (state) => ({
           ここを関数にすると、CSSセレクターで抽出された各DOM要素を引数としてその関数が呼び出されるようになります。</p>
 
           <pre class="line-numbers"><code class="language-javascript">{
-  "option": (element, index) => ({
+  ".option": (element, index) => ({
     selected: state.selection === element.value
   })
 }</code></pre>

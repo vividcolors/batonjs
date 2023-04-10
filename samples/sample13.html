@@ -47,11 +47,11 @@
         show(state) {
           const score = (state.score == -1) ? null : this.scoreTable[state.score]
           return {
-            "input": {
+            "*|input": {
               value: state.value, 
               oninput: this.boundOninput
             }, 
-            "span": {
+            "*|span": {
               textContent: state.score == -1 ? "" : score.desc, 
               "style-color": state.score == -1 ? "black" : score.color
             }

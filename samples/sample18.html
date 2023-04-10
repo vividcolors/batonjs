@@ -31,11 +31,11 @@
         })
       }
       const show = (state) => ({
-        ul: {
+        "*|ul": {
           batonChildKeys: state.items, 
           batonChildTemplate: document.getElementById('template'), 
-          li: (el, i) => ({
-            "span": {
+          "*|li": (el, i) => ({
+            "*|span": {
               innerText: state.items[i]
             }, 
             ".removeButton": {
