@@ -103,6 +103,10 @@ const run = async () => {
   const outDirPathAsset = path.join(docPath, "dist/asset")
   checkDir(outDirPathAsset)
   await runDir("en", config, inDirPathAsset, outDirPathAsset)
+
+  const inPathHta = path.join(docPath, "src/.htaccess")
+  const outPathHta = path.join(docPath, "dist/.htaccess")
+  await copyFile(inPathHta, outPathHta)
 }
 
 const copySamples = () => {
