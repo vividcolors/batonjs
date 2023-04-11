@@ -486,7 +486,7 @@ export const remove = (key, vs) => {
 }
 
 export const update = (...args) => {
-  const vs = args.at(-1)
+  const vs = args[args.length - 1]
   switch (typeOf(vs)) {
     case 'array': {
       const rv = vs.concat()
