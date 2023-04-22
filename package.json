@@ -23,7 +23,6 @@
         "url": "https://github.com/vividcolors/batonjs.git"
     },
     "type": "module",
-    "dependencies": {},
     "devDependencies": {
         "@rollup/plugin-terser": "^0.4.0",
         "cpx": "^1.5.0",
