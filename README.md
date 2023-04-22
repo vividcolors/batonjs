@@ -48,6 +48,8 @@ The `withState` function on line 11 is used to update the page state. When the c
 
 At line 13, we invoke batonjs, which will return `withState` to manage the state we give it.
 
+In this way, batonjs can be used to program dynamic web pages in a manner similar to CSS.
+
 There is [a real working example](https://batonjs.com/en/samples.html?no=1) of this example in [the live samples](https://batonjs.com/en/samples.html). There are many more working live samples included in this repository.
 
 ### To Lean More
