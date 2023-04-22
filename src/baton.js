@@ -164,7 +164,8 @@ export const baton = (state, show, baseEl = null) => {
         switch (ev.type) {
           case 'insert': {
             const template = decls.batonChildTemplate || el.batonChildTemplate
-            const c = (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
+            const c = (typeof template === "function") ? template(ev.key, newKeys.indexOf(ev.key))
+                    : (template.constructor.name === "HTMLTemplateElement") ? template.content.firstElementChild.cloneNode(true)
                     : template.cloneNode(true)
             c.setAttribute('data-baton-key', ev.key)
             delete c.batonUnmounted
@@ -294,7 +295,7 @@ export const diff = (newKeys, oldKeys) => {
     } else {
       // insert
       const beforeKey = (k > 0) ? newKeys[k - 1] : null
-      events.push({type:'insert', key:newKey, afterKey:beforeKey})
+      events.push({type:'insert', key:newKey, afterKey:beforeKey, index:k})
     }
     newKeyed[newKey] = k
     k++
