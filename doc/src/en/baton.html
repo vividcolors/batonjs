@@ -390,7 +390,10 @@ const show = (state) => ({
           <p>batonjs recognizes the correct order of the child elements from the key array and adds, removes, and rearranges them so that the children are aligned accordingly in the DOM as well.</p>
 
           <p>Remark<br />
-            If the child is pre-described in HTML, be sure to write the <code>data-baton-key</code> attribute on it.</p>
+          If the child is pre-described in HTML, be sure to write the <code>data-baton-key</code> attribute on it.</p>
+
+          <p>Supplement<br />
+          You may also specify a function for <code>batonChildTemplate</code>. In that case, the function should take the key and index as parameters and return the child DOM element.</p>
 
           <h5>"mounted" property and update monitoring of lifecycle</h5>
 

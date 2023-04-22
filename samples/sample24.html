@@ -1,0 +1,86 @@
+<!-- samples/sample24.html; Inserting dynamically determined child -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inserting dynamically determined child</title>
+  </head>
+  <body>
+    <ul>
+    </ul>
+    <button type="button" id="add-image">Add Image</button>
+    <button type="button" id="add-text">Add Text</button>
+    <template id="image-template">
+      <li>
+        <img />
+        <button type="button">Remove</button>
+      </li>
+    </template>
+    <template id="text-template">
+      <li>
+        <span></span>
+        <button type="button">Remove</button>
+      </li>
+    </template>
+    <script type="module">
+      import {baton, insert, remove, update} from '../asset/baton.esm.js'
+      const state = {items:[{id:"1", type:"image", url:"https://picsum.photos/seed/1/400/80"}]}
+      const onremove = (ev) => {
+        const index = ev.target.dataset.index
+        withState(state => {
+          const items = remove(index, state.items)
+          return update("items", items, state)
+        })
+      }
+      const onaddimage = (ev) => {
+        const id = "" + Date.now()
+        const item = {id, type: "image", url: `https://picsum.photos/seed/${id}/400/80`}
+        withState(state => update("items", insert(state.items.length, item, state.items), state))
+      }
+      const onaddtext = (ev) => {
+        const id = "" + Date.now()
+        const item = {id, type: "text", content: `text @${id}`}
+        withState(state => update("items", insert(state.items.length, item, state.items), state))
+      }
+      const createElement = (key, idx) => {
+        let li = null
+        withState(state => {
+          const item = state.items[idx]
+          if (item.id !== key) console.error("bad item", key, idx, item)
+          if (item.type == "image") {
+            li = document.getElementById('image-template').content.firstElementChild.cloneNode(true)
+          } else {
+            li = document.getElementById('text-template').content.firstElementChild.cloneNode(true)
+          }
+          return
+        })
+        return li
+      }
+      const show = (state) => ({
+        "*|ul": {
+          batonChildKeys: state.items.map(i => i.id), 
+          batonChildTemplate: createElement, 
+          "*|li": (el, i) => ({
+            "*|img": {
+              src: state.items[i].url
+            }, 
+            "*|span": {
+              innerText: state.items[i].content
+            }, 
+            "*|button": {
+              "data-index": i, 
+              onclick: onremove
+            }
+          })
+        }, 
+        "#add-image": {
+          onclick: onaddimage
+        }, 
+        "#add-text": {
+          onclick: onaddtext
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>
