@@ -1,26 +1,23 @@
 {
     "name": "@vividcolors/batonjs",
     "version": "0.0.1",
-    "description": "Declarative UI framework for the Web that is easy to deploy and collaborative.",
+    "description": "Declarative UI framework for Web that is easy to introduce and collaborative",
     "keywords": [
         "framework",
-        "frontend",
         "web",
         "app",
+        "declarative", 
         "ui"
     ],
-    "homepage": "https://github.com/vividcolors/batonjs",
+    "homepage": "https://batonjs.com/en/",
     "bugs": {
         "url": "https://github.com/vividcolors/batonjs/issues"
     },
     "license": "MIT",
-    "author": {
-        "name": "Tetsuo Yamada",
-        "email": "tyam@vividcolors.co.jp"
-    },
+    "author": "vividcolors, inc. (https://github.com/vividcolors)",
     "repository": {
         "type": "git",
-        "url": "https://github.com/vividcolors/batonjs.git"
+        "url": "git+https://github.com/vividcolors/batonjs.git"
     },
     "type": "module",
     "devDependencies": {
@@ -34,7 +31,7 @@
         "doc": "node doc/script/convert.js",
         "test": "node test/test.js"
     },
-    "main": "dist/baton.cjs.js",
-    "module": "dist/baton.esm.js",
-    "browser": "dist/baton.umd.js"
+    "main": "asset/baton.cjs.js",
+    "module": "asset/baton.esm.js",
+    "browser": "asset/baton.umd.js"
 }
