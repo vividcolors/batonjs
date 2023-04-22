@@ -67,16 +67,16 @@ See [official documentation](https://batonjs.com/en/) for details.
 Installation of batonjs is not required; loading it from CDN is recommended as it is easier.  
 You can also download it from CDN in advance and deploy it on your own server.
 
-ES Module format __TODO URL__
+ES Module format
 ```html
 <script type="module">
-import {baton} from '../dist/baton.esm.js'
+import {baton} from 'https://cdn.jsdelivr.net/npm/@vividcolors/batonjs/asset/baton.esm.js'
 </script>
 ```
 
-UMD format __TODO URL__
+UMD format
 ```html
-<script src="../dist/baton.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vividcolors/batonjs/asset/baton.umd.js"></script>
 <script>
 const baton = batonjs.baton
 </script>
@@ -86,9 +86,8 @@ const baton = batonjs.baton
 
 If you install with npm, there is room for bundling and tree shaking.
 
-__TODO PACKAGE NAME__
 ```shell
-$ npm install batonjs
+$ npm install @vividcolors/batonjs
 ```
 
 ES Module format

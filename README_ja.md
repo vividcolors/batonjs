@@ -68,18 +68,18 @@ batonjsの特筆すべき点は、フレームワークに従って作ってい�
 batonjsはインストールは必須ではありません。CDNから読み込むのが気楽でおすすめです。  
 あらかじめCDNからダウンロードしておき、自サーバーに配置することもできます。
 
-ESモジュール形式 __TODO URL__
+ESモジュール形式
 
 ```html
 <script type="module">
-import {baton} from '../dist/baton.esm.js'
+import {baton} from 'https://cdn.jsdelivr.net/npm/@vividcolors/batonjs/asset/baton.esm.js'
 </script>
 ```
 
-UMD形式 __TODO URL__
+UMD形式
 
 ```html
-<script src="../dist/baton.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vividcolors/batonjs/asset/baton.umd.js"></script>
 <script>
 const baton = batonjs.baton
 </script>
@@ -89,9 +89,8 @@ const baton = batonjs.baton
 
 npmでインストールすれば、バンドルしたりTree Shakingしたりする余地があります。
 
-__TODO PACKAGE NAME__
 ```shell
-$ npm install batonjs
+$ npm install @vividcolors/batonjs
 ```
 
 ESモジュール形式
