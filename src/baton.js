@@ -32,6 +32,14 @@ export const baton = (state, show, baseEl = null) => {
     }
   }
 
+  const resolveDecls = (decls, el, i, lhsName) => {
+    decls = (typeof decls == "function") ? decls(el, i) : decls
+    if (typeof decls !== "object") {  // typical error
+      throw new Error(`Element decl must be an object but got ${typeof decls} (on rhs of "${lhsName}")`)
+    }
+    return decls
+  }
+
   const collectKeys = (parent) => {
     const keys = []
     for (let c = parent.firstChild; c; c = c.nextSibling) {
@@ -116,7 +124,7 @@ export const baton = (state, show, baseEl = null) => {
             lifecycles.delete(subEl)
             continue
           }
-          const subDecls = (typeof value == "function") ? value(subEl, i) : value
+          const subDecls = resolveDecls(value, subEl, i, name)
           processElement(subDecls, subEl, isFirstTime)
           i++
         }
@@ -222,7 +230,7 @@ export const baton = (state, show, baseEl = null) => {
     reflectionScheduled = false
     
     const decls0 = show(state)
-    const decls = (typeof decls0 === 'function') ? decls0(baseEl, 0) : decls0
+    const decls = resolveDecls(decls0, baseEl, 0, "<root>")
     processElement(decls, baseEl, isFirstTime)
     
     // There may be elements without UI declarations. We process them here.
