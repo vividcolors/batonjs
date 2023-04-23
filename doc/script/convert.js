@@ -6,9 +6,12 @@ import { fileURLToPath } from 'url'
 import cpx from 'cpx'
 
 const show = (config) => {
+  let pageTitle = ''
   return {
-    "title ": (el) => ({innerHTML: el.innerHTML + ' | ' + config.siteTitle}), 
-    "head ": (el) => ({innerHTML: el.innerHTML + config.head}), 
+    "title ": (el) => (pageTitle = el.innerHTML, {innerHTML: el.innerHTML + ' | ' + config.siteTitle}), 
+    "head ": (el) => ({
+      innerHTML: el.innerHTML + config.head + `<meta property="og:site_name" content="${config.siteTitle}" /><meta property="og:title" content="${pageTitle}" /><meta property="og:description" content="${el.querySelector('meta[name="description"]').getAttribute("content")}" /><meta property="og:locale" content="${config.locale}" />`
+    }), 
     "#header": {innerHTML: config.header}, 
     "#sidebar": {innerHTML: config.sidebar}, 
     "#footer": {innerHTML: config.footer}, 
@@ -55,6 +58,7 @@ const run1 = async (lang, config, inPath, outPath) => {
 
   const state =  {
     siteTitle: config.window.document.documentElement.querySelector(`.site-title.${lang}`).innerHTML, 
+    locale: config.window.document.documentElement.querySelector(`.locale.${lang}`).innerHTML, 
     head: config.window.document.documentElement.querySelector(`.head.${lang}`).innerHTML, 
     header: config.window.document.documentElement.querySelector(`.header.${lang}`).innerHTML, 
     sidebar: config.window.document.documentElement.querySelector(`.sidebar.${lang}`).innerHTML, 
