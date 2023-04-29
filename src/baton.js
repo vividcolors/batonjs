@@ -406,9 +406,7 @@ export const defineComponent = (name, tpl, decl, options = {}, attrs = null) => 
         this.innerHTML = tpl
       } else if (tpl.constructor.name === "HTMLTemplateElement") {
         while (this.firstChild) this.removeChild(this.firstChild)
-        for (let c of tpl.content.cloneNode(true)) {
-          this.appendChild(c)
-        }
+        this.appendChild(tpl.content.cloneNode(true))
       }
       // replace slot to original children
       const slot = this.querySelector('slot')
