@@ -1,0 +1,160 @@
+<!-- samples/sample25.html; Using defineComponent -->
+<html id="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Using defineComponent</title>
+    <style>
+      aa-field {
+        display: flex;
+        flex-direction: row;
+        padding: 1rem 0;
+      }
+      aa-field .head {
+        position: relative;
+        min-width: 10rem;
+        flex: 0 1 10rem;
+      }
+      aa-field .head label {
+        font-size: 0.875rem;
+        font-weight: bold;
+      }
+      aa-field .head .message {
+        position: absolute;
+        left: 100%;
+        top: -1rem;
+        color: #D04000;
+        font-size: 0.8rem;
+        width: 80vw;
+      }
+      aa-field .body {
+        flex: 1 1 auto;
+      }
+      aa-field .body .description {
+        font-size: 0.8rem;
+        color: #606060;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body id="body">
+    <aa-field label="Your name" data-for="name"><!-- These are our component. -->
+      <input type="text" name="name" />
+    </aa-field>
+    <aa-field label="Sex" data-for="sex">
+      <label><input type="radio" name="sex" value="Male" />Male</label>
+      <label><input type="radio" name="sex" value="Female" />Female</label>
+    </aa-field>
+    <aa-field label="Bread Lover" description="Check if you love bread." data-for="breadLover">
+      <label><input type="checkbox" name="breadLover" value="true" />Bread Lover</label>
+    </aa-field>
+    <button type="button" id="button">Submit</button>
+    <template id="aa-field-template">
+      <div class="head">
+        <label></label>
+        <div class="message"></div>
+      </div>
+      <div class="body">
+        <slot></slot>
+        <p class="description"></p>
+      </div>
+    </template>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/ajv/8.12.0/ajv7.min.js'></script>
+    <script type="module">
+      import {baton, defineComponent, update} from '../asset/baton.esm.js'
+      const Ajv = window.ajv7
+      defineComponent('aa-field', document.getElementById('aa-field-template'), (state) => ({
+        ".head label": {
+          textContent: state.label
+        }, 
+        ".head .message": {
+          "style-display": state.message ? "block" : "none", 
+          textContent: state.message
+        }, 
+        ".description": {
+          innerText: state.description
+        }
+      }))
+      const schema = {
+        type: 'object', 
+        properties: {
+          name: {type:'string', minLength:1}, 
+          sex: {enum:['Male', 'Female']}, 
+          breadLover: {type:'boolean'}
+        }, 
+        required: ["name", "sex", "breadLover"]
+      }
+      const validate = (new Ajv({coerceTypes: true, allErrors: true})).compile(schema)
+      const state = {
+        data: {name:'', sex:null, breadLover:false}, 
+        messages: {name:null, sex:null, breadLover:null}
+      }
+      const updateMessages = (targetProps, errors, messages) => {
+        errors = errors || []
+        for (let prop of targetProps) {
+          const error = errors.find(e => e.instancePath === '/' + prop)
+          messages = update(prop, error ? error.message : null, messages)
+        }
+        return messages
+      }
+      const onChangeEnum = (ev) => {
+        withState(state => {
+          const data = update(ev.target.name, ev.target.value, state.data)
+          validate(data)
+          const messages = updateMessages([ev.target.name], validate.errors, state.messages)
+          return update('data', data, 'messages', messages, state)
+        })
+      }
+      const onChangeBool = (ev) => {
+        withState(state => {
+          const value = ev.target.checked
+          const data = update(ev.target.name, value, state.data)
+          validate(data)
+          const messages = updateMessages([ev.target.name], validate.errors, state.messages)
+          return update('data', data, 'messages', messages, state)
+        })
+      }
+      const onBlur = (ev) => {
+        withState(state => {
+          const data = update(ev.target.name, ev.target.value, state.data)
+          validate(data)
+          const messages = updateMessages([ev.target.name], validate.errors, state.messages)
+          return update('data', data, 'messages', messages, state)
+        })
+      }
+      const onSubmit = (ev) => {
+        withState(state => {
+          const data = structuredClone(state.data)
+          if (validate(data)) {
+            setTimeout(() => {
+              alert('Submitted successfully.')
+            })
+          }
+          const messages = updateMessages(Object.keys(data), validate.errors, state.messages)
+          return update('data', data, 'messages', messages, state)
+        })
+      }
+      const show = (state) => ({
+        "*|aa-field": (el) => ({
+          message: state.messages[el.dataset.for]
+        }), 
+        "input[name='name']": {
+          value: state.data.name, 
+          onblur: onBlur
+        }, 
+        "input[name='sex']": (el) => ({
+          checked: state.data.sex === el.value, 
+          onchange: onChangeEnum
+        }), 
+        "input[name='breadLover']": {
+          checked: state.data.breadLover, 
+          onchange: onChangeBool
+        }, 
+        "#button": {
+          onclick: onSubmit
+        }
+      })
+      const withState = baton(state, show)
+    </script>
+  </body>
+</html>

@@ -13,33 +13,39 @@
       <aside id="sidebar"></aside>
       <div role="document">
         <select id="selector">
-          <option value="1">Simple counter</option>
-          <option value="2">Embedding event handler</option>
-          <option value="4">Using class-* property, style-* property</option>
-          <option value="5">Nested selectors</option>
-          <option value="6">Declaration as function</option>
-          <option value="10">Asynchronous event handler</option>
-          <option value="12">Multiple instances</option>
-          <option value="22">Loading batonjs in UMD format</option>
-
-          <option value="7">Controlled inputs</option>
-          <option value="8">Uncontrolled inputs</option>
-          <option value="9">Using web components</option>
-          <option value="11">Handling SVG</option>
-
-          <option value="3">CSS Transition</option>
-          <option value="15">jQuery's slideUp/Down</option>
-          <option value="16">Scroll Animation</option>
-          <option value="17">Dropdown</option>
-          <option value="20">Carousel Slider</option>
-
-          <option value="18">Insert/Remove child</option>
-          <option value="19">Insert/Remove child with CSS Transition</option>
-          <option value="24">Inserting dynamically determined child</option>
-          <option value="21">Sortable ToDo List by Sortablejs</option>
-          <option value="23">CSS Transition at initialization</option>
-          <option value="13">Creating web components</option>
-          <option value="14">Bootstrap5, REST API, Code Splitting</option>
+          <optgroup label="Basic">
+            <option value="1">Simple counter</option>
+            <option value="2">Embedding event handler</option>
+            <option value="4">Using class-* property, style-* property</option>
+            <option value="5">Nested selectors</option>
+            <option value="6">Declaration as function</option>
+            <option value="10">Asynchronous event handler</option>
+            <option value="12">Multiple instances</option>
+            <option value="22">Loading batonjs in UMD format</option>
+            <option value="7">Controlled inputs</option>
+            <option value="8">Uncontrolled inputs</option>
+            <option value="9">Using web components</option>
+            <option value="11">Handling SVG</option>
+            <option value="25">Using defineComponent</option>
+            <option value="13">Creating web components</option>
+            <option value="3">CSS Transition</option>
+          </optgroup>
+          <optgroup label="Common usage">
+            <option value="15">jQuery's slideUp/Down</option>
+            <option value="16">Scroll Animation</option>
+            <option value="17">Dropdown</option>
+            <option value="20">Carousel Slider</option>
+          </optgroup>
+          <optgroup label="Child management">
+            <option value="18">Insert/Remove child</option>
+            <option value="19">Insert/Remove child with CSS Transition</option>
+            <option value="24">Inserting dynamically determined child</option>
+            <option value="21">Sortable ToDo List powered by Sortablejs</option>
+            <option value="23">CSS Transition at initialization</option>
+          </optgroup>
+          <optgroup label="Practical">
+            <option value="14">Bootstrap5, REST API, Code Splitting</option>
+          </optgroup>
         </select>
         </label>
         <div class="grid" id="the-grid">
