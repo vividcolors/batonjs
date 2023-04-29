@@ -1,7 +1,7 @@
 
 import {typeOf} from '../src/baton.js'
 
-const moduleNames = ["data.js", "event.js", "diff.js"]
+const moduleNames = ["data.js", "event.js", "diff.js", "detectAttrs.js"]
 
 const isEqual = (a, b) => {
   const ta = typeOf(a)
@@ -51,16 +51,20 @@ const makeContext = () => {
   ]
 }
 
+const echo = (str) => {
+  console.log(str)
+}
+
 const run1 = async (moduleName) => {
   const [ctx, getResult] = makeContext()
   const module = await import("./" + moduleName)
-  console.log(`${moduleName} START`)
+  echo(`${moduleName} START`)
   await module.main(ctx)
   const {totalCount, failures} = getResult()
   for (let f of failures) {
-    console.log('- ' + f)
+    echo('- ' + f)
   }
-  console.log(`${moduleName} END; total:${totalCount}, failures:${failures.length}`)
+  echo(`${moduleName} END; total:${totalCount}, failures:${failures.length}`)
 }
 
 for (let moduleName of moduleNames) {

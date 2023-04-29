@@ -374,6 +374,72 @@ const presetOptions = {
   }
 }
 
+export const detectAttrs = (f) => {
+  const getParam = (src) => {  // we don't support destructuring binding
+    const paramResult1 = src.match(/^function\s*\((.*?)\)/)
+    if (paramResult1) return paramResult1[1]
+    const paramResult2 = src.match(/^\(?(.*?)\)?\s*=>/)
+    if (paramResult2) return paramResult2[1]
+    throw new Error(`malformed function: ${src}`)
+  }
+  const src = f.toString().replace(/\/\/.*$|\/\*[\s\S]*?\*\/|\s/gm, '') // strip comments
+  const param = getParam(src)
+  const re = new RegExp(`${param}\\.(\\w+)|${param}\\[\\\'(.+)\\\'\\]|${param}\\[\\\"(.+)\\\"\\]`, 'g')  // TODO: space inside tokens
+  const attrs = {}
+  for (let hit of src.matchAll(re)) {
+    const attr = hit[1] || hit[2] || hit[3]  // TODO: unescape string literal
+    attrs[attr] = true
+  }
+  return attrs
+}
+
+export const defineComponent = (name, tpl, decl, options = {}, attrs = null) => {
+  attrs = attrs || Object.keys(detectAttrs(decl))
+  const baseCls = options.extends ? document.createElement(options.extends).constructor : HTMLElement
+  const cls = class extends baseCls {
+    constructor() {
+      super()
+      // backup children
+      const originalChildren = [...this.children]  
+      // fill content with template
+      if (typeof tpl === 'string') {
+        this.innerHTML = tpl
+      } else if (tpl.constructor.name === "HTMLTemplateElement") {
+        while (this.firstChild) this.removeChild(this.firstChild)
+        for (let c of tpl.content.cloneNode(true)) {
+          this.appendChild(c)
+        }
+      }
+      // replace slot to original children
+      const slot = this.querySelector('slot')
+      if (slot) {
+        for (let c of originalChildren) {
+          slot.insertAdjacentElement('beforebegin', c)
+        }
+        slot.parentNode.removeChild(slot)
+      }
+    }
+    static observedAttributes = attrs
+    connectedCallback() {
+      // activate batonjs
+      const values = {}
+      for (let a of attrs) {
+        values[a] = this.getAttribute(a)
+      }
+      this.withState = baton(values, decl, this)
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (! this.withState) return
+      const values = {}
+      for (let a of attrs) {
+        values[a] = this.getAttribute(a)
+      }
+      this.withState((_x) => values)
+    }
+  }
+  customElements.define(name, cls, options)
+}
+
 /**
  * options.target: css-selector
  * options.onstart: callback
