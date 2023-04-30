@@ -1,0 +1,218 @@
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>コンポーネント</title>
+    <meta property="og:url" content="https://batonjs.com/ja/components.html" />
+    <meta property="og:type" content="article" />
+    <meta name="description" content="batonjsにおけるコンポーネントの取り扱いと、defineComponent関数について説明します。" />
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>コンポーネント</h1>
+          <h4>batonjsにおけるコンポーネントの取り扱いと、defineComponent関数について説明します。</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="how">batonjsにおけるコンポーネントの取り扱い</h2>
+
+          <p>batonjsはコンポーネントを定義するための特別な仕組みを持っておらず、もっぱらウェブコンポーネントを使います。<br />
+          外部のウェブコンポーネントを使うこともできますし、batonjsを活用してウェブコンポーネントを作ることもできます。<br />
+          特に、内部状態を持たないコンポーネントを簡単に作るために、batonjsはdefineComponent関数を提供しています。</p>
+
+          <p>batonjsでコンポーネントを使う方法をまとめると、次のようになります。</p>
+
+          <ul>
+            <li>使いたいウェブコンポーネントが既にある場合<br /><small>そのウェブコンポーネントを使いましょう。</small></li>
+            <li>内部状態を持たないコンポーネントを作りたい場合<br /><small>下記のdefineComponentで簡単に作れます。</small></li>
+            <li>内部状態を持つコンポーネントを作りたい場合<br /><small>ゼロからウェブコンポーネントを作りましょう。内部状態の管理にbatonjsを使うこともできます。</small></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 id="defineComponent">defineComponent</h2>
+
+          <p>batonjsの仕組みを使ってウェブコンポーネントを定義します。batonjsでは、この関数で作ったウェブコンポーネントを「batonコンポーネント」と呼びます。<br />
+          batonコンポーネントは内部状態を持つことができず、与えられた属性のみに依存して変わる<strong>純粋に関数的</strong>なものです。<br />
+          また、Web標準の観点からは、batonコンポーネントはシャドウDOMを持たないカスタム要素です。</p>
+
+          <h5>例</h5>
+          <pre class="line-numbers"><code class="language-javascript">defineComponent(
+  'aa-field', 
+  '&lt;div class="head">
+    &lt;label>&lt;/label>
+    &lt;p class="error-message">&lt;/p>
+  &lt;/div>
+  &lt;div class="body">
+    &lt;slot>&lt;/slot>
+    &lt;p class="description">&lt;/p>
+  &lt;/div>', 
+  state => ({
+    ".head label": {textContent: state.label}, 
+    ".head .error-message": {"style-display": state["error-message"] ? "block" : "none", textContent: state["error-message"]}, 
+    ".body .description": {textContent: state.description}
+  })
+)</code></pre>
+
+          <h5>パラメーター</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">名前</th>
+                  <th scope="col">型</th>
+                  <th scope="col">デフォルト</th>
+                  <th scope="col" class="description-column">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>省略不可</td>
+                  <td>カスタム要素のタグ名</td>
+                </tr>
+                <tr>
+                  <td>template</td>
+                  <td>string | HTMLTemplateElement | function</td>
+                  <td>省略不可</td>
+                  <td>コンポーネントの中身のテンプレート。当DOM要素のinnerHTMLプロパティにあたるもので、複数の要素（DocumentFragment）も可能です。<br />
+                  文字列の場合はそれがHTML文字列として解釈されます。<br />
+                  テンプレート要素の場合はその中身がクローンされます。<br />
+                  関数の場合は、それが呼び出されます。</td>
+                </tr>
+                <tr>
+                  <td>show</td>
+                  <td>function</td>
+                  <td>省略不可</td>
+                  <td>コンポーネントの動的な部分を定義する関数。<br />
+                  baton関数に渡すshowと同じですが、監視中の属性リストがstateになります。</td>
+                </tr>
+                <tr>
+                  <td>options</td>
+                  <td>オブジェクト</td>
+                  <td><code>{}</code></td>
+                  <td><a href="https://developer.mozilla.org/ja/docs/Web/API/CustomElementRegistry/define" target="_blank">customElements.define</a>の第3引数と同じです。</td>
+                </tr>
+                <tr>
+                  <td>options.extends</td>
+                  <td>文字列</td>
+                  <td>N/A</td>
+                  <td><a href="https://developer.mozilla.org/ja/docs/Web/API/CustomElementRegistry/define" target="_blank">customElements.define</a>の第3引数と同じです。カスタム組み込み要素を定義するのに使われます。</td>
+                </tr>
+                <tr>
+                  <td>observedAttributes</td>
+                  <td>Array|null</td>
+                  <td><code>null</code></td>
+                  <td>カスタム要素のobservedAttributesプロパティに設定される属性名のリスト。ここに列挙した属性は監視対象となり、属性値が変わるとコンポーネントが再描画されるようになります。<br />
+                  省略された場合・<code>null</code>の場合は当関数が自動検出します。自動検出には限界がありますので注意してください（後述）。</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>返却値</h5>
+          <p>なし</p>
+
+          <h5>defineComponentの仕組み</h5>
+
+          <p>defineComponentで作ったコンポーネントは、batonアプリケーションと同じ仕組みで動作します。<br />
+          batonアプリケーションとbatonコンポーネントを対比してみると理解が進むでしょう。</p>
+
+          <figure>
+            <table>
+              <thead>
+                <th>比較項目</th>
+                <th>batonアプリケーション</th>
+                <th>batonコンポーネント</th>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>状態</td>
+                  <td>ページ状態。ユーザーの操作等に応じて変わる。</td>
+                  <td>カスタム要素の属性リスト。属性値の変化に応じて変わる。</td>
+                </tr>
+                <tr>
+                  <td>show関数</td>
+                  <td>HTML文書全体（またはbaseElで指定したDOM要素）を基準とするUI宣言。</td>
+                  <td>当カスタム要素を基準とするUI宣言。</td>
+                </tr>
+                <tr>
+                  <td>対象となるHTML</td>
+                  <td>HTML文書全体（またはbaseElで指定したDOM要素）。</td>
+                  <td>defineComponent関数の第2引数で与えられたテンプレートをクローンしたもの。それが当カスタム要素の中身になる。</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>スロットの扱い</h5>
+
+          <p>コンポーネントの中身は2つの経路から与えられます。コンポーネントを作る側はdefineComponentの第2引数（テンプレート）として、コンポーネントを使う側はカスタム要素の子要素として。</p>
+
+          <p>通常は、カスタム要素の子要素は削除されて、defineComponentのテンプレートで上書きされます。<br />
+          ただし、テンプレートがslot要素を含んでいる場合は、そのslot要素が古い中身（＝カスタム要素の子要素）で上書きされます。<br />
+          つまりコンポーネントを作る際、外部から子要素を受け取りたい場合は、子要素の位置にslot要素を書いておけばそこに差し込まれる、ということです。</p>
+
+          <h5>監視属性の自動検出の限界</h5>
+
+          <p>defineComponentの第5引数observedAttributesはコンポーネントの監視属性のリストですが、defineComponent関数はこの属性を自動検出できます。<br />
+          自動検出は第3引数showをtoString関数で文字列にしたものを調査する形で行われますが、javascriptコードが一定の形であることを要求します。<br />
+          ここでは、show関数でできること・できないことをリストアップします。</p>
+
+          <figure>
+            <table>
+              <tbody>
+                <tr>
+                  <td>functionキーワードを用いた関数式を<strong class="do">使えます</strong>。</td>
+                  <td><code>function (state) {...}</code></td>
+                </tr>
+                <tr>
+                  <td>アロー関数式を<strong class="do">使えます</strong>。</td>
+                  <td><code>state => ...</code></td>
+                </tr>
+                <tr>
+                  <td>関数のパラメータ数は1以外には<strong class="dont">できません</strong>。</td>
+                  <td><code>(state, otherArg) => ...</code></td>
+                </tr>
+                <tr>
+                  <td>関数パラメータの名前は自由に<strong class="do">決められます</strong>。</td>
+                  <td><code>anyName => ...</code></td>
+                </tr>
+                <tr>
+                  <td>関数パラメータの分割代入は<strong class="dont">使えません</strong>。</td>
+                  <td><code>({a, b, c}) => ...</code></td>
+                </tr>
+                <tr>
+                  <td>関数パラメータをそのまま別の変数に代入することは<strong class="dont">できません</strong>。</td>
+                  <td><code>anyName => {var x = anyName; ...}</code></td>
+                </tr>
+                <tr>
+                  <td>関数パラメータのプロパティへ、ドット表記法でアクセス<strong class="do">できます</strong>。</td>
+                  <td><code>state => ({foo: state.foo, ...})</code></td>
+                </tr>
+                <tr>
+                  <td>関数パラメータのプロパティへ、ブラケット表記法でアクセス<strong class="do">できます</strong>。</td>
+                  <td><code>state => ({foo: state["my-foo"], bar: state['my-bar'], ...})</code></td>
+                </tr>
+                <tr>
+                  <td>関数パラメータのプロパティへブラケット表記法でアクセスする際、リテラルでないプロパティ名を使うことは<strong class="dont">できません</strong>。</td>
+                  <td><code>state => ({foo: state[someVariable], bar: state['my' + '-bar'], ...})</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <p>関数オブジェクトの文字列化はブラウザの進化と共に実装が変わる可能性があります。今は適切に動いていても、将来のいつか動かなくなることもあるかもしれません。<br />
+          簡便性と保守性を天秤にかけて、検討のうえ使うようにしてください。</p>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>

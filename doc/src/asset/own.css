@@ -139,3 +139,15 @@ iframe#result, pre#src-wrap {
 .force-mobile-layout #result {
   border: 3px solid var(--nav-border-color) !important;
 }
+
+strong.do {
+  font-weight: bold;
+  font-style: normal;
+  color: #30d730;
+}
+
+strong.dont {
+  font-weight: bold;
+  font-style: normal;
+  color: #d74630;
+}

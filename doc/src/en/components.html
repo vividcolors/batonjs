@@ -1,0 +1,218 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Components</title>
+    <meta property="og:url" content="https://batonjs.com/ja/components.html" />
+    <meta property="og:type" content="article" />
+    <meta name="description" content="This article describes the handling of components in batonjs and the defineComponent function." />
+  </head>
+  <body>
+    <nav class="container-fluid" id="header"></nav>
+    <main class="container">
+      <aside id="sidebar"></aside>
+      <div role="document">
+        <hgroup>
+          <h1>Components</h1>
+          <h4>This article describes the handling of components in batonjs and the defineComponent function.</h4>
+        </hgroup>
+        <nav id="toc" class="toc"></nav>
+
+        <section>
+          <h2 id="how">Component handling in batonjs</h2>
+
+          <p>Batonjs has no special mechanism for defining components and exclusively uses web components.<br />
+          You can use external web components, or you can make use of batonjs to create web components.<br />
+          Especially for easy creation of components that do not have internal state, batonjs provides the defineComponent function.</p>
+
+          <p>The following is a summary of how to use components in batonjs.</p>
+
+          <ul>
+            <li>When you already have a web component that you want to use<br /><small>Use its web component.</small></li>
+            <li>When you want to create a component that has no internal state<br /><small>You can easily create it with the following defineComponent.</small></li>
+            <li>When you want to create a component with internal state<br /><small>Create web components from scratch. You can also use batonjs for internal state management.</small></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 id="defineComponent">defineComponent</h2>
+
+          <p>This function defines a web component using the batonjs mechanism. In batonjs, a web component created with this function is called a "baton component".<br />
+          A baton component cannot have internal state, and is <strong>purely functional</strong>, changing only depending on the given attributes.<br />
+          Also, from the web standards perspective, a baton component is a custom element that does not have a shadow DOM.</p>
+
+          <h5>Example</h5>
+          <pre class="line-numbers"><code class="language-javascript">defineComponent(
+  'aa-field', 
+  '&lt;div class="head">
+    &lt;label>&lt;/label>
+    &lt;p class="error-message">&lt;/p>
+  &lt;/div>
+  &lt;div class="body">
+    &lt;slot>&lt;/slot>
+    &lt;p class="description">&lt;/p>
+  &lt;/div>', 
+  state => ({
+    ".head label": {textContent: state.label}, 
+    ".head .error-message": {"style-display": state["error-message"] ? "block" : "none", textContent: state["error-message"]}, 
+    ".body .description": {textContent: state.description}
+  })
+)</code></pre>
+
+          <h5>Parameters</h5>
+          <figure>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">name</th>
+                  <th scope="col">type</th>
+                  <th scope="col">default</th>
+                  <th scope="col" class="description-column">description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>mandatory</td>
+                  <td>Tag name of the custom element</td>
+                </tr>
+                <tr>
+                  <td>template</td>
+                  <td>string | HTMLTemplateElement | function</td>
+                  <td>mandatory</td>
+                  <td>A template for the content of the component. It corresponds to the innerHTML property of this DOM element, and multiple elements (DocumentFragment) are also possible.<br />
+                  If it is a string, it is interpreted as an HTML string.<br />
+                  If it is a template element, its content is cloned.<br />
+                  If it is a function, it is called.</td>
+                </tr>
+                <tr>
+                  <td>show</td>
+                  <td>function</td>
+                  <td>mandatory</td>
+                  <td>A function that defines the dynamic part of the component.<br />
+                  Same as show passed to the baton function, but the state is the list of attributes being monitored.</td>
+                </tr>
+                <tr>
+                  <td>options</td>
+                  <td>object</td>
+                  <td><code>{}</code></td>
+                  <td>Same as the third argument of <a href="https://developer.mozilla.org/ja/docs/Web/API/CustomElementRegistry/define" target="_blank">customElements.define</a></td>
+                </tr>
+                <tr>
+                  <td>options.extends</td>
+                  <td>string</td>
+                  <td>N/A</td>
+                  <td>ame as the third argument of <a href="https://developer.mozilla.org/ja/docs/Web/API/CustomElementRegistry/define" target="_blank">customElements.define</a>. It is used to define custom built-in elements.</td>
+                </tr>
+                <tr>
+                  <td>observedAttributes</td>
+                  <td>Array|null</td>
+                  <td><code>null</code></td>
+                  <td>A list of attribute names that will be set in the <code>observedAttributes</code> property of the custom element. The attributes listed here will be monitored and the component will be redrawn when the attribute value changes.<br />
+                  If omitted or given <code>null</code>, this function will auto-detect. Note that there are limits to automatic detection (see below).</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Return Value</h5>
+          <p>none</p>
+
+          <h5>Mechanism of defineComponent</h5>
+
+          <p>Components created with defineComponent work in the same way as baton applications.<br />
+          Comparing the baton component with the baton application will help you understand the difference.</p>
+
+          <figure>
+            <table>
+              <thead>
+                <th>Comparison items</th>
+                <th>baton application</th>
+                <th>baton component</th>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>state</td>
+                  <td>Page state. It changes according to user operations, etc.</td>
+                  <td>Attribute list for custom elements. It will change as the attribute values change.</td>
+                </tr>
+                <tr>
+                  <td><code>show</code> function</td>
+                  <td>A UI declaration that originates from an entire HTML document or from a DOM element specified by baseEl.</td>
+                  <td>A UI declaration originating from this custom element.</td>
+                </tr>
+                <tr>
+                  <td>Target HTML</td>
+                  <td>The entire HTML document or the DOM element specified in baseEl.</td>
+                  <td>A cloned version of the template given in the second argument of the <code>defineComponent</code> function. That will be the content of this custom element.</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <h5>Slot</h5>
+
+          <p>The contents of a component are given through two paths. From the component creator as the second argument of <code>defineComponent</code> (the <code>template</code> parameter) and from the component user as a child element of a custom element.</p>
+
+          <p>Normally, the children of the custom element are deleted and overwritten by the defineComponent template.<br />
+          However, if the template contains a slot element, the slot element will be overwritten with the old content (i.e., the custom element's child elements).<br />
+          This means that when creating a component, if you want to receive child elements from the outside, you can write a slot element in the child element's position and it will be inserted there.</p>
+
+          <h5>Limitations of automatic detection of attributes</h5>
+
+          <p>The fifth argument of <code>defineComponent</code>, <code>observedAttributes</code>, is a list of observed attributes of the component, and the <code>defineComponent</code> function can automatically detect these attributes.<br />
+          Automatic detection is performed by examining the third argument, <code>show</code>, as a string with the <code>toString</code> function, but requires that the javascript code be in a certain form.<br />
+          Here is a list of what you can and cannot do with the <code>show</code> function.</p>
+
+          <figure>
+            <table>
+              <tbody>
+                <tr>
+                  <td>You <strong class="do">can</strong> use function expressions with the function keyword.</td>
+                  <td><code>function (state) {...}</code></td>
+                </tr>
+                <tr>
+                  <td>You <strong class="do">can</strong> use arrow function expressions.</td>
+                  <td><code>state => ...</code></td>
+                </tr>
+                <tr>
+                  <td>The number of function parameters <strong class="dont">cannot</strong> be other than 1.</td>
+                  <td><code>(state, otherArg) => ...</code></td>
+                </tr>
+                <tr>
+                  <td>You <strong class="do">can</strong> freely name the function parameter.</td>
+                  <td><code>anyName => ...</code></td>
+                </tr>
+                <tr>
+                  <td>Destructuring assignment of function parameters <strong class="dont">cannot</strong> be used.</td>
+                  <td><code>({a, b, c}) => ...</code></td>
+                </tr>
+                <tr>
+                  <td>You <strong class="dont">cannot</strong> assign a function parameter as-is to another variable.</td>
+                  <td><code>anyName => {var x = anyName; ...}</code></td>
+                </tr>
+                <tr>
+                  <td>You <strong class="do">can</strong> access the properties of function parameters using the dot notation.</td>
+                  <td><code>state => ({foo: state.foo, ...})</code></td>
+                </tr>
+                <tr>
+                  <td>You <strong class="do">can</strong> access the properties of function parameters using bracketed notation.</td>
+                  <td><code>state => ({foo: state["my-foo"], bar: state['my-bar'], ...})</code></td>
+                </tr>
+                <tr>
+                  <td>You <strong class="dont">cannot</strong> use non-literal property names when accessing function parameter properties in bracketed notation.</td>
+                  <td><code>state => ({foo: state[someVariable], bar: state['my' + '-bar'], ...})</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+
+          <p>The implementation of converting function objects to strings may change as browsers evolve. Even if it works properly now, it may not work sometime in the future.<br />
+          Please use it after careful consideration, weighing its convenience against its maintainability.</p>
+        </section>
+
+        <footer id="footer"></footer>
+      </div>
+    </main>
+  </body>
+</html>
