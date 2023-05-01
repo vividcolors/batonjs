@@ -43,14 +43,14 @@
           <h5>例</h5>
           <pre class="line-numbers"><code class="language-javascript">defineComponent(
   'aa-field', 
-  '&lt;div class="head">
+  `&lt;div class="head">
     &lt;label>&lt;/label>
     &lt;p class="error-message">&lt;/p>
   &lt;/div>
   &lt;div class="body">
     &lt;slot>&lt;/slot>
     &lt;p class="description">&lt;/p>
-  &lt;/div>', 
+  &lt;/div>`, 
   state => ({
     ".head label": {textContent: state.label}, 
     ".head .error-message": {"style-display": state["error-message"] ? "block" : "none", textContent: state["error-message"]}, 
