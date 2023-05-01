@@ -4,7 +4,7 @@
     <title>batonjs</title>
     <meta property="og:url" content="https://batonjs.com/ja/" />
     <meta property="og:type" content="website" />
-    <meta name="description" content="batonjsは、導入しやすく協調的な、Web向け宣言型UIフレームワーク。CSSライクな記述で既存のウェブページにダイナミズムを与えられます。" />
+    <meta name="description" content="batonjsは既存ページにダイナミズムを後付けする宣言的UIフレームワークです。ダイナミックな部分だけをピンポイントでCSS風に記述できます。" />
   </head>
   <body>
     <nav class="container-fluid" id="header"></nav>
@@ -13,15 +13,26 @@
       <div role="document">
         <hgroup>
           <h1>batonjs</h1>
-          <h4>導入しやすく協調的な、Web向け宣言型UIフレームワーク</h4>
+          <h4>既存ページにダイナミズムを後付けする宣言的UIフレームワーク</h4>
         </hgroup>
 
+        <p>batonjsは既存ページにダイナミズムを後付けする宣言的UIフレームワークです。<br />
+        HTMLをクライアント側で作るのではなく、サーバ側で作ったHTMLにダイナミズムを後付けします。そうすることで次のような長所を得ました：</p>
+
         <ul>
-          <li>導入しやすい<br /><small>Node.js、webpack、Babel等のツールは不要。CDNでロードするだけで始められます</small></li>
-          <li>協調的<br /><small>DOMを専有しないのでjQueryなど他のライブラリと共存できます</small></li>
-          <li>ワンストップ<br /><small>他のライブラリは不要。これだけで宣言的にUIの状態を管理できます</small></li>
-          <li>学びやすい<br /><small>Web標準の上に独自の概念を少し付け足しただけなので、学習が少なく済みます</small></li>
-          <li>保守しやすい<br /><small>枠組みに沿って書けば自然とコードが整理されるので、保守がしやすくなります</small></li>
+          <li>ダイナミックな部分だけをピンポイントでCSS風に記述</li>
+          <li>HTMLを専有しないので、jQueryなどDOMに変更を加えるライブラリと併用可能</li>
+          <li>設定上当然ですが、サーバー側言語を限定せず、ページの表示速度やSEOも良好</li>
+        </ul>
+
+        <p>また、batonjsは次のような優れた特性も持っています：</p>
+
+        <ul>
+          <li>高速ロード <small>-- gzipで4kbと小さいのでロードが高速です</small></li>
+          <li>ワンストップ <small>-- 他のライブラリ無しで様々なページを作れます</small></li>
+          <li>導入が楽 <small>-- Node.js、babel、webpackなどが不要です</small></li>
+          <li>学びやすい <small>-- Web標準の上に独自の概念を少し付け足しただけ</small></li>
+          <li>保守しやすい <small>-- 枠組みに沿って書くだけで自然とコードが整理されます</small></li>
         </ul>
 
         <nav id="toc" class="toc"></nav>

@@ -1,12 +1,19 @@
 # batonjs
 
-Declarative UI framework for Web that is easy to introduce and collaborative
+batonjs is a declarative UI framework that retrofits dynamism to existing pages.  
+It retrofits dynamism to the HTML created on the server side, instead of creating it on the client side. By doing so, the following advantages are obtained:
 
-- Easy to introduce: You don't need to use either Node.js, webpack or Babel, etc. Just load from CDN to get started
-- Collaborative: It does not occupy DOM, so it can coexist with other libraries such as jQuery
-- One-stop: You don't need any other libraries. This is all you need to declaratively manage UI state
-- Easy to learn: You have less learning because we only add a few of our own concepts on top of the web standards
-- Maintenable: Your code will be easier to maintain because it will be naturally organized if you code according to the framework
+- You just write the dynamic part at a pinpoint in CSS style
+- It doesn't own HTML, so you can use it with libraries that modify the DOM, such as jQuery
+- As a matter of course, you can choose the server-side language, and the page display speed and SEO are good
+
+batonjs also has the following outstanding characteristics: 
+
+- Fast load  -- It is small (4kb gzip) so loads fast
+- One-stop  -- You can create various pages without other libraries
+- Easy to introduce  -- You don't need to use either Node.js, webpack or Babel, etc.
+- Easy to learn  -- Just a few own concepts added on top of the web standards
+- Easy to maintain  -- Just by following the framework, the code will naturally be organized
 
 ## Overview
 
