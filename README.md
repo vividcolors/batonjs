@@ -63,8 +63,6 @@ There is [a real working example](https://batonjs.com/en/samples.html?no=1) of t
 
 batonjs offers a variety of functionalities, including property update observation, support for CSS transitions, adding/removing DOM elements, and lifecycle management, defining components. You can combine these features to create dynamic web pages.
 
-A notable feature of batonjs is that by following the framework, you can separate page state updates, reflections on the UI, and the detailed behavior of the UI.
-
 See [official documentation](https://batonjs.com/en/) for details.
 
 ## Installation
