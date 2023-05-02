@@ -100,12 +100,12 @@ $ npm install @vividcolors/batonjs
 
 ESモジュール形式
 ```javascript
-import {baton} from 'batonjs'
+import {baton} from '@vividcolors/batonjs'
 ```
 
 CommonJS形式
 ```javascript
-const {baton} = require('batonjs')
+const {baton} = require('@vividcolors/batonjs')
 ```
 
 ## 動作環境

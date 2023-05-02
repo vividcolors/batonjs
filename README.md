@@ -97,12 +97,12 @@ $ npm install @vividcolors/batonjs
 
 ES Module format
 ```javascript
-import {baton} from 'batonjs'
+import {baton} from '@vividcolors/batonjs'
 ```
 
 CommonJS format
 ```javascript
-const {baton} = require('batonjs')
+const {baton} = require('@vividcolors/batonjs')
 ```
 
 ## Runtime Requirements
