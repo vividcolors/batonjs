@@ -1,7 +1,7 @@
 {
     "name": "@vividcolors/batonjs",
-    "version": "0.0.3",
-    "description": "Declarative UI framework for Web that is easy to introduce and collaborative",
+    "version": "0.0.4",
+    "description": "A declarative UI framework that retrofits dynamism to existing pages",
     "keywords": [
         "framework",
         "web",
